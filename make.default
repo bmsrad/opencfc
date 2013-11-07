@@ -1,0 +1,111 @@
+TGT_DIR        = $(BKTKT_BASE)/target
+
+CPU              = PPC603
+TOOL             = gnu
+TOOL_FAMILY      = gnu
+
+
+.SUFFIXES:	.cpp .out .cxx
+.PHONY: __always_build__ clean
+
+all: exe
+
+LD_LINK_PATH	= $(LD_LINK_PATH_EXTRA) \
+		  -L$(TGT_DIR)/lib/$(VX_CPU_FAMILY)/$(CPU)/$(TOOL)
+LD_LINK_PATH	+= -L$(TGT_DIR)/lib/$(VX_CPU_FAMILY)/$(CPU)/$(TOOL_COMMON_DIR)
+
+LD_LINK_LIBS	= $(subst .a,, $(subst lib, -l, \
+			         $(notdir $(foreach dir, \
+					    $(subst -L,, $(LD_LINK_PATH)), \
+					    $(wildcard $(dir)/lib*.a)))))
+
+#
+# VX_OS_LIBS: libraries present in LD_LINK_PATH and 
+#	      $(TGT_DIR)/lib/lib$(CPU)$(TOOL)vx.a. Supposedly, only OS libraries
+#	      should be there.
+# LIBS:       customer's libraries and VX_OS_LIBS
+#
+
+VX_OS_LIBS	= $(LD_LINK_LIBS) $(TGT_DIR)/lib/lib$(CPU)$(TOOL)vx.a
+LIBS		= $(LIB_EXTRA) $(VX_OS_LIBS)
+
+DIRCHAR		= $(subst x,\,x)
+OPTION_DOLLAR_SYMBOLS	= -fdollars-in-identifiers
+OPTION_OBJECT_ONLY	= -c
+
+ifeq ($(LIBNAME),)
+LIBNAME		= lib$(CPU)$(TOOL)vx.a
+endif
+
+ifeq ($(LIBDIRNAME),)
+LIBDIRNAME	= obj$(CPU)$(TOOL)vx
+endif
+
+## directories
+
+BIN_DIR		= $(BKTKT_BASE)\host\$(WIND_HOST_TYPE)\bin
+CONFIG_ALL	= $(TGT_DIR)\config\all
+DEMO_DIR        = $(TGT_DIR)\lib\obj$(CPU)$(TOOL)test
+LIBDIR		= $(TGT_DIR)\lib\$(LIBDIRNAME)
+RESOURCE_DIR	= $(BKTKT_BASE)\host\resource
+WTXTCL		= $(BIN_DIR)\wtxtcl.exe
+
+AR               = arppc
+AS               = ccppc
+CC               = ccppc
+CFLAGS           = -O2 -mcpu=603 -mstrict-align -ansi -fno-builtin -I. -I./inc -I$(BKTKT_BASE)/target/h/ -DCPU=PPC603 -DTOOL_FAMILY=gnu -DTOOL=gnu 
+CFLAGS_AS        = -g -mstrict-align -ansi -nostdinc -fvolatile -fno-builtin -fno-for-scope -P -x assembler-with-cpp -I. -I$(BKTKT_BASE)/target/h -DCPU=PPC603
+CPP              = ccppc -E -P -xc
+LD               = ldppc
+LDFLAGS          = -X -N
+LD_PARTIAL_FLAGS = -X -r
+NM               = nmppc
+OPTION_DEFINE_MACRO = -D
+OPTION_INCLUDE_DIR = -I
+POST_BUILD_RULE  = 
+SIZE             = sizeppc
+TOOLENV          = ppc
+
+MUNCH           	= wtxtcl $(TGT_DIR)/h/tool/gnu/munch.tcl $(MUNCH_FLAGS)
+MUNCH_FLAGS     	= -c $(TOOLENV)
+NM_GLOB_FLAGS		= -g
+
+COMPILE_TRADITIONAL	= $(CC) $(OPTION_OBJECT_ONLY) $(OPTION_DOLLAR_SYMBOLS)\
+			  $(CFLAGS)
+
+BASE_LD_PARTIAL_FLAGS   = $(filter-out -r -nostdlib,$(LD_PARTIAL_FLAGS))
+LD_PARTIAL              = $(CC) -r -nostdlib $(subst -,$(OPTION_PASS_TO_LD)-,$(BASE_LD_PARTIAL_FLAGS))
+OPTION_PASS_TO_LD       = -Wl,
+
+
+LD_SCRIPT_DOWNLOAD      = -T $(TGT_DIR)/h/tool/gnu/link.OUT
+LD_COLLAPSE_SECTIONS    = $(LD_SCRIPT_DOWNLOAD)
+LD_PARTIAL_LAST_FLAGS   = $(LD_COLLAPSE_SECTIONS)
+
+# for cyclic link support
+
+LD_START_GROUP  	= --start-group
+LD_END_GROUP		= --end-group
+LD_PARTIAL_START_GROUP	= $(OPTION_PASS_TO_LD)$(LD_START_GROUP)
+LD_PARTIAL_END_GROUP	= $(OPTION_PASS_TO_LD)$(LD_END_GROUP)
+
+
+exe	: $(DEFAULT_RULE)
+
+release : $(RELEASE)
+
+__always_build__:
+
+clean   :
+	- $(RM) *.o  ctdt.c *.out 
+	
+
+	
+$(DEFAULT_RULE):  $(PRJ_OBJS) $(PRJ_LIBS) $(PRJ_OBJS_FILE)
+	@ $(RM) $@ ctdt.c
+	$(LD_PARTIAL) $(PRJ_OBJS_FOR_LD_PARTIAL)  $(PRJ_LIBS) -o partialImage.o 
+	$(NM) partialImage.o $(PRJ_OBJS_FOR_NM) | $(MUNCH) > ctdt.c
+	$(COMPILE_TRADITIONAL) ctdt.c -o ctdt.o
+	$(LD_PARTIAL) $(LD_PARTIAL_LAST_FLAGS) partialImage.o ctdt.o -o $@
+	@ $(RM) ctdt.c ctdt.o partialImage.o
+	$(POST_BUILD_RULE)
