@@ -8,6 +8,7 @@
  *
  *****************************************************************************/
 /*#define SMARTPLC_TRACE         */
+
 #include    "oem/config.h"        /* configuration defines */
 #include    "oem/odk_prj.h"
 #include    "smartplc/odk_plc.h"
@@ -780,17 +781,34 @@ tLzsIecFB  LZSCONST  Oem2FBTab_g[] =
     LZSNULL,		/*Index = 459*/
 };
 #endif
-
+extern tLzsIecFB LZSCONST* sysBKLoadOemFBTable(int* size);
 void  LzsSetOEMFBTable (void)
 {
-
+	int setOk=0;
 /* This function will be called on startup to initialize firmware function
    block jump table.
 */
 #if 1
-   wFBTabEntrys_l[2]    = sizeof(Oem1FBTab_g) / sizeof(tLzsIecFB);  /* determine number of table entries */
-   fpIecFBTab_l[2]   = (tLzsIecFB LZSCONST*)&Oem1FBTab_g;
 
+	if(sysBKLoadOemFBTable)
+	{
+		int size=0;
+		tLzsIecFB * p=(tLzsIecFB *)sysBKLoadOemFBTable(&size);
+		if(p&&size>0)
+		{
+			LZSWORD sz=(LZSWORD)size;
+			  wFBTabEntrys_l[2] = sz;  /* determine number of table entries */
+			  fpIecFBTab_l[2]   = p;
+			  setOk=1;
+		}
+	}
+/*如果没有正确安装则使用默认的*/
+	if(setOk==0)
+	{
+
+		  wFBTabEntrys_l[2]    = sizeof(Oem1FBTab_g) / sizeof(tLzsIecFB);  /* determine number of table entries */
+		   fpIecFBTab_l[2]   = (tLzsIecFB LZSCONST*)&Oem1FBTab_g;
+	}
    wFBTabEntrys_l[3]    = sizeof(Oem2FBTab_g) / sizeof(tLzsIecFB);  /* determine number of table entries */
    fpIecFBTab_l[3]   = (tLzsIecFB LZSCONST*)&Oem2FBTab_g;
 #endif

@@ -25,9 +25,14 @@
 #include    "smartplc/odk_plc.h"
 #include    "smartplc/lzs.h"
 #include    "smartplc/iec_fb.h"    /* infoteam firmware */
-#include    "oem/oem_fb.h"        /* OEM firmware*/
 #include    "smartplc/external.h"
 
+
+
+const char* bkcfcIdent(){
+	static char version[]="Made on " __DATE__ " " __TIME__ ;
+	return version;
+	};
 #define TESTFUNCTION_IINPUT1	0xc
 #define TESTFUNCTION_IINPUT2	0xe
 #define TESTFUNCTION_IOUT1	0x8
@@ -40,9 +45,6 @@ LZSBYTE FB_ADD_I(void)/*对新声明的功能块进行定义*/
 	in2 = GETINT(TESTFUNCTION_IINPUT2);
 	out1 = in1 + in2;
 	SETINT(TESTFUNCTION_IOUT1, out1);
-    *(int*)0xaf000000=out1%500;
-    if(out1%500==0)
-    *(int*)0xaf000004=(*(int*)0xaf000004)+1;
 
 	return (kIecOK);
 }

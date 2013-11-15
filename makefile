@@ -3,7 +3,7 @@ PRJ_OBJS_FILE=prjObjs.lst
 PRJ_OBJS =bktest.o oemfb.o oemfbtab.o
 PRJ_TYPE =vxApp
 PRJ_LIBS = test.a
-DEFAULT_RULE=test.out
+DEFAULT_RULE=bkcfc.out
 PRJ_OBJS_FOR_NM=@$(PRJ_OBJS_FILE)
 PRJ_OBJS_FOR_LD_PARTIAL=-Wl,$(PRJ_OBJS_FOR_NM)
 include make.default
