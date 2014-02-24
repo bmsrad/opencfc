@@ -773,6 +773,8 @@ tLzsIecFB  LZSCONST  Oem2FBTab_g[] =
 };
 #endif
 extern tLzsIecFB LZSCONST* sysBKLoadOemFBTable(int* size);
+extern tLzsIecFB LZSCONST* sysBKLoadAppFBTable(int* size);
+
 void  LzsSetOEMFBTable (void)
 {
 	int setOk=0;
@@ -799,9 +801,38 @@ void  LzsSetOEMFBTable (void)
 		  wFBTabEntrys_l[2]    = sizeof(Oem1FBTab_g) / sizeof(tLzsIecFB);  /* determine number of table entries */
 		   fpIecFBTab_l[2]   = (tLzsIecFB LZSCONST*)&Oem1FBTab_g;
 	}
-   wFBTabEntrys_l[3]    = sizeof(Oem2FBTab_g) / sizeof(tLzsIecFB);  /* determine number of table entries */
-   fpIecFBTab_l[3]   = (tLzsIecFB LZSCONST*)&Oem2FBTab_g;
 
 #endif
+}
+
+void LzsSetOEMFBTable2(void)
+{
+	int setOk=0;
+/* This function will be called on startup to initialize firmware function
+   block jump table.
+*/
+#if 1
+
+	if(sysBKLoadAppFBTable)
+	{
+		int size=0;
+		tLzsIecFB * p=(tLzsIecFB *)sysBKLoadAppFBTable(&size);
+		if(p&&size>0)
+		{
+			LZSWORD sz=(LZSWORD)size;
+			  wFBTabEntrys_l[3] = sz;  /* determine number of table entries */
+			  fpIecFBTab_l[3]   = p;
+			  setOk=1;
+		}
+	}
+/*如果没有正确安装则使用默认的*/
+	if(setOk==0)
+	{
+		  wFBTabEntrys_l[3]    = sizeof(Oem2FBTab_g) / sizeof(tLzsIecFB);  /* determine number of table entries */
+		   fpIecFBTab_l[3]   = (tLzsIecFB LZSCONST*)&Oem2FBTab_g;
+	}
+
+#endif
+
 }
 
