@@ -1,6 +1,6 @@
 PRJ_DIR =.
 PRJ_OBJS_FILE=prjObjs.lst
-PRJ_OBJS =bktest.o oemfb.o oemfbtab.o
+PRJ_OBJS =bktest.o oemfb.o oemfbtab.o lzsenv.o smartplcmain.o
 PRJ_TYPE =vxApp
 PRJ_LIBS = test.a
 DEFAULT_RULE=bkcfc.out
@@ -24,6 +24,8 @@ $(PRJ_OBJS_FILE)_make : $(foreach obj,$(PRJ_OBJS),$(obj)_._write_._)
 $(foreach obj,$(PRJ_OBJS),$(obj)_._write_._) :
 	@echo $(subst _._write_._,,$@)
 
+smartplcmain.o:smartplcmain.c
+	$(CC) $(CFLAGS) -c $<
 
 bktest.o:bktest.cpp
 	$(CC) $(CFLAGS) -c $<

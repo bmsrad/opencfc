@@ -8,7 +8,7 @@
 /* process image */
 #define PADT_SEG_NUM_PI_IMG             1
 
-/* error log */
+/* error log (logical segment number) */
 #define PADT_SEG_NUM_ERRORLOG           2
 
 /* native code help segment */
@@ -26,7 +26,7 @@
 /* binary DCF segment */
 #define PADT_SEG_NUM_BIN_DCF            7
 
-/* segment with "0" contents */
+/* vartab segment */
 #define PADT_SEG_NUM_VARTAB             8
 
 /* hardware configuration segment */
@@ -35,16 +35,16 @@
 /* mapping table for direct BYREF access */
 #define PADT_SEG_NUM_DIRBYREF			10
 
-/* IO Mapping table (OEM-specific) */
-#define PADT_SEG_NUM_IOMAP1				11
-
-/* IO Mapping table (OEM-specific) */
-#define PADT_SEG_NUM_IOMAP2				12
-
-/* IO (OEM-specific) */
-#define PADT_SEG_NUM_IO2				13
-
 /* ======== FROM HERE ON: P0699-specific segment numbers ======== */
+
+/* system error panel buffer (logical segment number) */
+#define PADT_SEG_NUM_SYSERRPANEL		11
+
+/* exception buffer (logical segment number) */
+#define PADT_SEG_NUM_EXCEPTIONBUFFER	12
+
+/* hardware configuration segment */
+#define PADT_SEG_NUM_HWCONFIG_STATION	13
 
 /* hardware configuration segment */
 #define PADT_SEG_NUM_HWCONFIG			14

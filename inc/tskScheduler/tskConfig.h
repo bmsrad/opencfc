@@ -8,9 +8,9 @@
 * Modify record:
 *
 *******************************************************/
+
 #ifndef  _TSKCONFIG_H_
 #define  _TSKCONFIG_H_
-#include "semlib.h"
 
 /*==============================================
 *system define area
@@ -46,34 +46,35 @@
 #define I7_ACTIVE					0x0800
 #define I8_ACTIVE					0x1000
 
+#define SYS_ACTIVE					0x2000
+
 #define TTASKS_MASK					0x001F
+#define ALLTASKS_MASK				0x201F
 
 
 
 /**************************
 *task cycle error configuration
 **************************/
-#define MAX_CYCLE_ERROR 3 /* maximum number of consecutive cycle errors tolerated */
+#define MAX_CYCLE_ERROR 10 /* maximum number of consecutive cycle errors tolerated */
+#define MAX_T0_WATCHDOG_ERROR 5 /* maximum number of consecutive T0 watchdog errors tolerated */
 
 
 
 /**************************
 *define all the tasks' priority
 **************************/
-#define TASK_MAIN_PRIO					8
 
-#define STOP_SCHEDULER_PRIO				9
+#define TASK0_PRIO						10
 
-#define INTERRUPT1_PRIO					10
-#define INTERRUPT2_PRIO					11
-#define INTERRUPT3_PRIO					12
-#define INTERRUPT4_PRIO					13
-#define INTERRUPT5_PRIO					14
-#define INTERRUPT6_PRIO					15
-#define INTERRUPT7_PRIO					16
-#define INTERRUPT8_PRIO					17
-
-#define TASK0_PRIO						20
+#define INTERRUPT1_PRIO					11
+#define INTERRUPT2_PRIO					12
+#define INTERRUPT3_PRIO					13
+#define INTERRUPT4_PRIO					14
+#define INTERRUPT5_PRIO					15
+#define INTERRUPT6_PRIO					16
+#define INTERRUPT7_PRIO					17
+#define INTERRUPT8_PRIO					18
 
 #define CYCLIC_TASK_SYS_PRIO			40/*21*/
 
@@ -82,15 +83,11 @@
 #define TASK3_NOR_PRIO					43/*24*/
 #define TASK4_NOR_PRIO					44/*25*/
 #define TASK5_NOR_PRIO					45/*26*/
-#define TASK6_NOR_PRIO					46/*26*/
 
-#define HMI_COMM_PRIO					60
 
-#define TASK_LISTEN_PRIO				70
+#define TASK_LISTEN_PRIO				60
 
-#define TASK_COMM_PRIO					71
-
-#define TCP_COMM_PRIO					72
+#define TASK_COMM_PRIO					70
 
 #define TASK_MSG_QUEUE_PRIO				80
 
@@ -220,7 +217,7 @@
 /******************************
 *Bus lock
 ******************************/
-#ifdef ENABLE_PERFORMANCE_MONITORING
+#ifdef ENABLE_PERFORMANCE_MONITORING_CUSTOM
 
 #define LOCK_BUS() \
 			LzsEnvStartPerformanceMeasurement(pPerformanceDataCustom1); \
@@ -251,12 +248,37 @@
 #define  RTC_SECOND
 
 
+
+#define _VG5_PLATFORM_
+
+
+#ifdef  _VME7050_PLATFORM_
+/*GET*/
+#define GET_SYSTEM_DATE()							getSystemDate()
+#define GET_SYSTEM_TIME()							getSystemTime()
+
+/*SET*/
+#define SET_SYSTEM_DATE(year,month,day)				setSystemDate(year*65536+month*256+day)
+#define SET_SYSTEM_TIME(hour,minute,second)			setSystemTime(hour*65536+minute*256+second)
+#endif
+
+#ifdef _VG5_PLATFORM_
+/*GET*/
+#define GET_SYSTEM_DATETIME(year,month,day,hour,minute,second)	rtcGetDateTime2(&month,&day,&year,&hour, &minute, &second)
+#define GET_SYSTEM_DATE()							vg5GetDate()
+#define GET_SYSTEM_TIME()							vg5GetTime()
+
+/*SET*/
+#define SET_SYSTEM_DATE(year,month,day)				rtcSetDate(month,day,year)
+#define SET_SYSTEM_TIME(hour,minute,second)			rtcSetTime(hour,minute,second)
+
+#endif
+
+
 /******************************
 * Shared memory struct
 ******************************/
-#undef USE_SHARED_MEMORY  /* ----------------yuhai--------2010-03-26---------------*/
-
-
+#undef USE_SHARED_MEMORY/* ----------------yuhai--------2010-03-26---------------*/
 #define SHM_BUFFER_SIZE		(64 * 1024)
 
 #ifdef USE_SHARED_MEMORY
@@ -264,10 +286,10 @@
 	typedef struct SHM_BUFF
 	{
 		SEM_ID semSmId;
+		unsigned long int dwShmChecksum;
 		char buff [SHM_BUFFER_SIZE];
 	} SHM_BUFF;
 #endif
-
 #endif
 
 

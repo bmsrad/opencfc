@@ -399,6 +399,12 @@ LZSBOOL LzsMemDeleteRetainTable(void);
 LZSBOOL LzsMemDeleteRetainData(void);
 #endif
 
+#ifdef _LZS_DYNAMIC_RETAIN_
+LZSBOOL LzsMemAddDynamicRetainData(tLzsRetainTableEntry* pVarEntry);
+LZSBOOL LzsMemApplyDynamicRetainData();
+LZSBOOL LzsMemResetDynamicRetain();
+#endif
+
 #ifndef _LZS_8BITBYTES_
 LZSBYTE LZSPUBLIC LzsMemAssemble32BitByte (LZSBYTE bByte1_p, LZSBYTE bByte2_p, LZSBYTE bByte3_p, LZSBYTE bByte4_p);
 #endif

@@ -45,7 +45,8 @@ typedef enum
     kIpModuloZero            = 0x93, /* second operand to mod was zero, result undefined */
     kIpArrElemNotSupported   = 0x92, /* array elements of unknown type */
     kIpNoMem                 = 0x91, /* out of memory */
-    kIpInvalidTypecast       = 0x90  /* unsupported typecast */
+    kIpInvalidTypecast       = 0x90, /* unsupported typecast */
+    kIpCPUException          = 0x8F  /* CPU exception */
 
 	/* until 0x80: reserved for future runtime error codes */
 	/* see also tLzsErrorCode in lzstypes.h! */
@@ -121,6 +122,10 @@ typedef enum
 	kBL_TDIC = 0x00000010,
 	kBL_N = 0x00000011,
 	kBL_UC = 0x00000012,
+	kBL_TDDS = 0x00000013,
+	kBL_TIDS = 0x00000014,
+	kBL_TDIS = 0x00000015,
+	kBL_UCBL = 0x00000016,
     kBL_R = 0x000000FF
 
 } tBLCodeInstruction;
@@ -151,10 +156,27 @@ typedef struct
 {
 	LZSDWORD dwInstruction;
 	void* pDestination;
+	void* pSource;
+
+} tBL_TDDS_Instruction;
+
+typedef struct
+{
+	LZSDWORD dwInstruction;
+	void* pDestination;
 	void** ppSourceSegment; /* includes one indirection: points to segment table entry, which contains the pointer to the segment */
 	LZSDWORD dwSourceOffset;
 
 } tBL_TID_Instruction;
+
+typedef struct
+{
+	LZSDWORD dwInstruction;
+	void* pDestination;
+	void** ppSourceSegment; /* includes one indirection: points to segment table entry, which contains the pointer to the segment */
+	LZSDWORD dwSourceOffset;
+
+} tBL_TIDS_Instruction;
 
 typedef struct
 {
@@ -164,6 +186,15 @@ typedef struct
 	void* pSource;
 
 } tBL_TDI_Instruction;
+
+typedef struct
+{
+	LZSDWORD dwInstruction;
+	void** ppDestinationSegment; /* includes one indirection: points to segment table entry, which contains the pointer to the segment */
+	LZSDWORD dwDestinationOffset;
+	void* pSource;
+
+} tBL_TDIS_Instruction;
 
 typedef struct
 {
@@ -211,6 +242,13 @@ typedef struct
 	LZSDWORD dwInstance;
 
 } tBL_UC_Instruction;
+
+typedef struct
+{
+	LZSDWORD dwInstruction;
+	void* pBLCode;
+
+} tBL_UCBL_Instruction;
 
 typedef struct
 {
@@ -314,7 +352,6 @@ typedef packed struct
 /* P0699-specific types                             */
 /*--------------------------------------------------*/
 
-#ifdef ENABLE_PERFORMANCE_MONITORING
 /* structure for performance monitoring */
 typedef struct
 {
@@ -326,13 +363,12 @@ typedef struct
 	float executionTimeSum;
 
 } tPerformanceData;
-#endif
 
 /* structure for task control */
 typedef struct
 {
 	LZSDWORD dwSystemTask;   /* one of the values from tSystemTasks (0..12, for I1..I8 and T1..T5) */
-	LZSDWORD dwMode;         /* one of the values from tFBModes (0..2, init/system/normal mode) */
+	LZSDWORD dwMode;         /* one of the values from tFBModes (0..6, init/system/normal/FI/CI/CE/FE mode) */
 	LZSDWORD dwExecOffset;   /* execution start offset for UCode */
 	LZSDWORD dwExecOffsetNC; /* execution start offset for native code */
 	LZSWORD* pProgramList;   /* list of programs (and their order) to be executed in this task/mode */
@@ -420,10 +456,12 @@ void GenBL_TDDC(LZSBYTE** ppBLCodePos, void* pDestination, void* pSource, LZSWOR
 void GenBL_TIDC(LZSBYTE** ppBLCodePos, void* pDestination, void** ppSourceSegment, LZSDWORD dwSourceOffset, LZSWORD wFromType, LZSWORD wToType);
 void GenBL_TDIC(LZSBYTE** ppBLCodePos, void** ppDestinationSegment, LZSDWORD dwDestinationOffset, void* pSource, LZSWORD wFromType, LZSWORD wToType);
 void GenBL_N(LZSBYTE** ppBLCodePos, LZSBOOL* pTarget);
-void GenBL_UC(LZSBYTE** ppBLCodePos, void* pProgramData, LZSDWORD dwInstance, tTaskControl* pTaskControl);
+void GenBL_UC(LZSBYTE** ppBLCodePos, void* pProgramData, LZSDWORD dwInstance);
+void GenBL_UCBL(LZSBYTE** ppBLCodePos, void* pBLCode);
 void GenBL_R(LZSBYTE** ppBLCodePos);
+void GenBL_TDDS(LZSBYTE** ppBLCodePos, void* pDestination, void* pSource);
 LZSDWORD GetBL_R_Size();
-LZSBYTE GenBLCode(tTaskControl* pControlSet, LZSBOOL fFirstPass, LZSBYTE** ppBLCodePos);
+LZSBYTE GenBLCode(tTaskControl* pControlSet, LZSBOOL fFirstPass, LZSBYTE** ppBLCodePos, LZSBYTE* pUCodeSeg, LZSBYTE* pDataSeg);
 tIpErrorCode IpRunBLCode(LZSBYTE* pBLCode);
 #endif
 

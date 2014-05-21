@@ -23,8 +23,6 @@
 	
 typedef LZSWORD tIpBreakPointType;
 
-
-
 /*--------------------------------------------------*/
 /* TYPE:tIpBreakPointEntry                          */
 /*       STRUCT to control breakpoints				*/
@@ -55,8 +53,6 @@ typedef packed struct
 
 } tIpBreakPoint;
 
-
-
 /*--------------------------------------------------------------------------- */
 /* Type definitions */
 /*--------------------------------------------------------------------------- */
@@ -64,28 +60,99 @@ typedef packed struct
 /* Marker for RTS status */
 typedef LZSDWORD  tLzsStatus;
 
+/* Watchdog errors */
+#ifdef USE_T0_WATCHDOG
+typedef struct
+{
+	LZSBOOL fIsValid;     /* flag telling if this error is still valid, i.e. within the watchdog time span for stop system */
+	LZSDWORD dwTimeStamp; /* timestamp (ms-based) of the watchdog error */
+
+} tWatchdogError;
+#endif
+
+/* Definition of CPU detection structures */
+typedef struct
+{
+	LZSBOOL fIsPresent;      /* flag telling if this CPU is present */
+	LZSBOOL fIsMaster;       /* flag telling if this is the master CPU */
+	LZSBOOL fHWConfFinished; /* flag telling if this CPU has finished its hardware check and configuration */
+	LZSBOOL fHWConfSuccess;  /* flag telling if this CPU has encountered any errors during hardware check and configuration */
+
+} tSHMHWConfCPU; /* structure for each single CPU */
+
+typedef struct
+{
+	LZSDWORD dwChecksum;         /* checksum of the station configuration segment */
+	tSHMHWConfCPU arrayCPUs[21]; /* one CPU structure for each slot; each CPU fills the structure belonging to its own slot */
+
+} tSHMHWConfStation; /* structure for the entire station */
+
 /* Definition of error categories */
+/* these values are also used as error identifiers in the system error panel */
 typedef enum
 {
-	kLzsInitialError            = 0x00,
-	kLzsTaskAdministrationError = 0x01,
-	kLzsHardwareMonitoringError = 0x02,
-	kLzsUserError               = 0x03,
-	kLzsCommunicationError      = 0x04,
+	kLzsFirstError              = 0x00,
+	kLzsInitialError            = 0x01,
+	kLzsTaskAdministrationError = 0x02,
+	kLzsHardwareMonitoringError = 0x03,
+	kLzsUserError               = 0x04,
 	kLzsRuntimeError            = 0x05,
-	kLzsInternalError           = 0x06
+	kLzsInternalError           = 0x06,
+	kLzsInternalError2          = 0x07,
+
+	kLzsNumCommunicationErrors  = 0x08,
+	kLzsCommunicationError1     = 0x09,
+	kLzsCommunicationError2     = 0x0A,
+	kLzsCommunicationError3     = 0x0B,
+	kLzsCommunicationError4     = 0x0C,
+	kLzsCommunicationError5     = 0x0D,
+	kLzsCommunicationError6     = 0x0E,
+	kLzsCommunicationError7     = 0x0F,
+	kLzsCommunicationError8     = 0x10,
+	kLzsCommunicationError9     = 0x11,
+
+	kLzsBoardFault1             = 0x12,
+	kLzsBoardFault2             = 0x13,
+	kLzsBoardFault3             = 0x14,
+	kLzsBoardFault4             = 0x15,
+	kLzsBoardFault5             = 0x16,
+	kLzsBoardFault6             = 0x17,
+	kLzsBoardFault7             = 0x18,
+	kLzsBoardFault8             = 0x19,
+	kLzsBoardFault9             = 0x1A,
+	kLzsBoardFault10            = 0x1B,
+	kLzsBoardFault11            = 0x1C,
+	kLzsBoardFault12            = 0x1D,
+	kLzsBoardFault13            = 0x1E,
+	kLzsBoardFault14            = 0x1F,
+	kLzsBoardFault15            = 0x20,
+	kLzsBoardFault16            = 0x21,
+	kLzsBoardFault17            = 0x22,
+	kLzsBoardFault18            = 0x23,
+	kLzsBoardFault19            = 0x24,
+	kLzsBoardFault20            = 0x25,
+	kLzsBoardFault21            = 0x26,
+	kLzsBoardFault22            = 0x27,
+	kLzsBoardFault23            = 0x28,
+	kLzsBoardFault24            = 0x29
 
 } tLzsErrorCategory;
 
-/* This definition must be adapted, if tLzsErrorCategory is changed! */
-#define NUM_ERROR_CATEGORIES 7
+/* The following definition must match the number of values in tLzsErrorCategory! It defines the size of the system error panel! */
+#define NUM_ERROR_CATEGORIES 0x2A
+
+/* NOTE: definition of error categories and error codes must also be represented in programming system file ErrorMap.xml (used to display error messages in the Diagnostic Tool)! */
+/* After modifying tLzsErrorCategory and/or tLzsErrorCode, ErrorMap.xml must be adapted accordingly! */
+
+/* NOTE: if any of the ranges in tLzsErrorCode are changed, make sure that LzsErrlogSetSysErrPanel() is modified accordingly! */
+/* It uses the error numbers as bit offsets, but first transforms them depending on the defined ranges/categories! */
 
 /* Definition of error codes */
 typedef enum
 {
 	kLzsSuccess                 = 0x00, /* everything OK */
 	
-	/* INTERNAL ERRORS - 0xA0..0xFF */
+	/* INTERNAL ERRORS - 0xC0..0xFF */
 	kLzsGeneralError            = 0xFF, /* general error */
 	kLzsUnknownCmd              = 0xFE, /* invalid control command (sent by OpenPCS) */
 	kLzsModeErr                 = 0xFD, /* operation not allowed in current mode */
@@ -157,56 +224,50 @@ typedef enum
 	kLzsBLExecError             = 0xC1, /* runtime error during execution */
 	
 	/* error codes for shared memory data consistency */
-	kLzsNoSHMConfig             = 0xC0, /* configuation segment not found */
+	kLzsNoSHMConfig             = 0xC0, /* configuration segment not found */
+
+	/* INTERNAL ERRORS 2 - 0xA0..0xBF */
 	kLzsSHMConfigError          = 0xBF, /* error in configuration, e.g. segments not found, ... */
 	kLzsSHMInitError            = 0xBE, /* error during creation or initialization of the memory (master) */
 	kLzsSHMInitErrorSlave       = 0xBD, /* error connecting to the memory (slave) */
 	kLzsSHMInitErrorSetInfo     = 0xBC, /* error setting up CPU-local information */
 	kLzsSHMDCBufferError        = 0xBB, /* error getting write buffer */
 	kLzsSHMDCSizeError          = 0xBA, /* size of shared memory is too small */
-	kLzsSHMDCChecksumError      = 0xB9, /* shared memory configuration from master and slave(s) is different */
+	kLzsSHMChecksumError        = 0xB9, /* shared memory configuration from master and slave(s) is different */
+	kLzsSHMDCLCError            = 0xB8, /* error when locking read buffer: LC was changed by the writer (this error is handled by retry) */
 
-	kLzsInitModeExecError       = 0xB8, /* error when executing init mode */
-	kLzsWaitTasksError          = 0xB7, /* operation not possible because tasks are still running */
+	kLzsInitModeExecError       = 0xAF, /* error when executing init mode */
+	kLzsErrorRecursion          = 0xAE, /* recursion in user FBs */
+	kLzsHwConfChecksumError     = 0xAD, /* hardware configuration from master and slave(s) is different */
+
+	kLzsDynRetainTableFull		= 0xA0, /* no more free entry in the dynamic retain table */
 	
-	/* until 0xA0: reserved for future internal error codes */
+	/* until (down to) 0xA0: reserved for future internal error codes */
 
 	/* RUNTIME ERRORS - 0x80..0x9F - defined in tIpErrorCode, ip_def.h */
 
 	/* COMMUNICATION ERRORS - 0x70..0x7F */
-	kLzsCommunicationError1     = 0x7F,
-	kLzsCommunicationError2     = 0x7E,
-	kLzsCommunicationError3     = 0x7D,
-	kLzsCommunicationError4     = 0x7C,
-	kLzsCommunicationError5     = 0x7B,
-	kLzsCommunicationError6     = 0x7A,
-	kLzsCommunicationError7     = 0x79,
-	kLzsCommunicationError8     = 0x78,
-	kLzsCommunicationError9     = 0x77,
-	kLzsCommunicationError10    = 0x76,
-	kLzsCommunicationError11    = 0x75,
-	kLzsCommunicationError12    = 0x74,
-	kLzsCommunicationError13    = 0x73,
-	kLzsCommunicationError14    = 0x72,
-	kLzsCommunicationError15    = 0x71,
-	kLzsCommunicationError16    = 0x70,
 
 	/* USER ERRORS have a separate number range, only defined on user application level */
 
 	/* HARDWARE MONITORING ERRORS - 0x60..0x6F */
-	/* to do later */
 
 	/* TASK ADMINISTRATION ERRORS - 0x50..0x5F */
 	kLzsFatalCycleError         = 0x5F, /* fatal cycle error (task cycle length exceeded in <n> consecutive cycles) */
 	kLzsSingleCycleError        = 0x5E, /* single cycle error (task cycle length exceeded once) */
+	kLzsWatchdogTimeoutError    = 0x5D, /* watchdog for T0 timed out */
 
 	/* INITIAL ERRORS - 0x40..0x4F */
-	kLzsInitMemoryError         = 0x4F, /* application memory not allocated */
-	kLzsInitSHMError            = 0x4E, /* shared memory not allocated/connected */
-	kLzsInitCommError           = 0x4D, /* communication not initialized */
-	kLzsInitTasksError          = 0x4C, /* tasks and/or background services not started */
-	kLzsInitErrLogError         = 0x4B, /* error log not initialized */
-	kLzsInitRestoreError        = 0x4A  /* persistent application not restored */
+	kLzsInitMemoryError          = 0x4F, /* application memory not allocated */
+	kLzsInitSHMError             = 0x4E, /* shared memory not allocated/connected */
+	kLzsInitCommError            = 0x4D, /* communication not initialized */
+	kLzsInitTasksError           = 0x4C, /* tasks and/or background services not started */
+	kLzsInitErrLogError          = 0x4B, /* error log not initialized */
+	kLzsInitRestoreError         = 0x4A, /* persistent application not restored */
+	kLzsInitExceptionBufferError = 0x49, /* exception buffer not initialized */
+	kLzsHwDetectError            = 0x48, /* error during hardware detection */
+	kLzsHwConfigureError         = 0x47, /* error during apply hardware configuration settings */
+	kLzsHwMasterError            = 0x46  /* error on the master during hardware check and configuration */
 
 } tLzsErrorCode;
 
@@ -238,7 +299,8 @@ typedef enum
    kLzsCmdDisableForceVariable   = 0x15,     /* command "Force Variable" */
    kLzsCmdDelWatchInstr = 0x16,     /* command "Del Watch Instruction" */   
    kLzsCmdAddMulWatchInstr = 0x17,  /* command "Add Multiple Watch Instruction" */
-   kLzsCmdDwlMultiSegment = 0x18,   /* download multiple segments at once*/
+   kLzsCmdDwlMultiSegment = 0x18,   /* download multiple segments at once */
+   kLzsCmdGetLibInfo    = 0x19,   /* get firmware library information */
    
    kLzsCmdRequestData   = 0x20,     /* command "Request Data" (to Watch) */
    kLzsCmdDwlWithoutStop = 0x21,    /* command "Download data (Resource/Program/Segments) while PLC is running */
@@ -276,7 +338,13 @@ typedef enum
    kLzsCmdDwlWithoutStopCont = 0x8A,    /* Continue kLzsCmdDwlWithoutStop */ 
    kLzsCmdReboot = 0x8B,	/* reboot PLC */
 
-/* Breakpoints */
+   kLzsCmdRestoreSystem			= 0x8C, /* restore resource from persistent storage */
+
+   kLzsCmdClearErrLog			= 0x8D, /* clear error log */
+   kLzsCmdClearErrLog2			= 0x8E, /* clear exception buffer */
+   kLzsCmdClearErrLog3			= 0x8F, /* clear system error panel */
+
+   /* Breakpoints */
    kLzsCmdBrPtAdd        = 0xA0,     /* Breakpoint Command */
    kLzsCmdBrPtRemove    = 0xA1,     /* Breakpoint Command */
    kLzsCmdBrPtRemoveAll    = 0xA2,     /* Breakpoint Command */
@@ -310,11 +378,12 @@ typedef enum
     kLzsSetSleepTime                        = 0xF5,        /* Change the sleeptime of the queue */
     kLzsDownloadResourceUpdateCollection    = 0xF6,        /* Collection for Update download */
     kLzsCheckResourceVersion                = 0xF7,        /* Check the Version of the PLC Version against the PCD */
-    kLzsDownloadUserSegmentCollection        = 0xF8,           /* Download configuration segment. -ae- 2000/08/31 */
-    kLzsUploadResourceCollection            = 0xF9,        /* Upload of a resource on the plc -ae- 2000/09/06 */
-    kLzsCompareVersions                        = 0xFA,        /* Compare the the OemId and the HW-/FW-/Kernel-Versions of the resource and the plc -ae- 2000/09/14*/
+    kLzsDownloadUserSegmentCollection        = 0xF8,           /* Download configuration segment. */
+    kLzsUploadResourceCollection            = 0xF9,        /* Upload of a resource on the PLC */
+    kLzsCompareVersions                        = 0xFA,        /* Compare the OemId and the HW-/FW-/Kernel-Versions of the resource and the PLC */
     kLzsDownloadResourceIncCollection        = 0xFB,        /* Resource Collection for incremental download */
-    kLzsUploadVarTabCollection                = 0xFC        /* Upload of VarTab segments */
+    kLzsUploadVarTabCollection                = 0xFC,        /* Upload of VarTab segments */
+    kLzsCompareFwLib                       = 0xFD        /* Compare the firmware libraries of the resource and the PLC */
 
 } tLzsCmdLst;
    
@@ -390,35 +459,37 @@ typedef enum
 /* Definition of events */
 typedef enum
 {
-   kLzsNoChange         = 0x00,     /* no change */
-   kLzsStateChg         = 0x01,     /* updated status of controller*/
-   kLzsError            = 0x02,     /* error occured (request GetErrInf) */
-   kLzsPflowData        = 0x03,     /* new powerflow data available */
-/*   kLzsWarning          = 0x04,   // Error/Warning (request GetErrInf) */
+	kLzsNoChange         = 0x00,     /* no change */
+	kLzsStateChg         = 0x01,     /* updated status of controller*/
+	kLzsError            = 0x02,     /* error occured (request GetErrInf) */
+	kLzsPflowData        = 0x03,     /* new powerflow data available */
+	/*   kLzsWarning          = 0x04,   // Error/Warning (request GetErrInf) */
 
-   kLzsWatchID          = 0x05,     /* Watch-ID in receipt buffer */
-   kLzsWatchData        = 0x06,     /* Watch-Data in receipt buffer */
-   kLzsResVer           = 0x07,     /* ResourceVersion in receipt buffer */
-   kLzsPlcVer           = 0x08,     /* FirmwareVersion in receipt buffer */
-   kLzsErrInf           = 0x09,     /* Errorstring in receipt buffer */
-   kLzsSegInf           = 0x0A,      /* Segment informationen in receipt buffer */
+	kLzsWatchID          = 0x05,     /* Watch-ID in receipt buffer */
+	kLzsWatchData        = 0x06,     /* Watch-Data in receipt buffer */
+	kLzsResVer           = 0x07,     /* ResourceVersion in receipt buffer */
+	kLzsPlcVer           = 0x08,     /* FirmwareVersion in receipt buffer */
+	kLzsErrInf           = 0x09,     /* Errorstring in receipt buffer */
+	kLzsSegInf           = 0x0A,      /* Segment informationen in receipt buffer */
 
-   kLzsBreakPointReached    = 0x0B,      /* Breakpoint reached */
-   kLzsBreakPointData        = 0x0C,     /* Breakpoint data for signaled breakpoints */
-   kLzsSysID            = 0x0D,     /* LZS-ID in receipt buffer */
-   kLzsLockTime         = 0x0E,     /* specification of lock time in receipt buffer */
-   kLzsDump                            = 0x0F,            /* stack,Reg for errors */
-    kLzsWatchIDList        = 0x10,
-    kLzsExtCap            = 0x11,        /* extendet capabilities */
-    kLzsOEMVers            = 0x12,     /* OEM Version info */
-    kLzsOnlineEditChangesApplied = 0x13,    /* old resource has been replaced */
-    kLzsSaveSystemCmdFinished     = 0x14,    /* LzsEnvSaveSystemCmd has finished */
+	kLzsBreakPointReached    = 0x0B,      /* Breakpoint reached */
+	kLzsBreakPointData        = 0x0C,     /* Breakpoint data for signaled breakpoints */
+	kLzsSysID            = 0x0D,     /* LZS-ID in receipt buffer */
+	kLzsLockTime         = 0x0E,     /* specification of lock time in receipt buffer */
+	kLzsDump             = 0x0F,            /* stack,Reg for errors */
+	kLzsWatchIDList        = 0x10,
+	kLzsExtCap            = 0x11,        /* extendet capabilities */
+	kLzsOEMVers            = 0x12,     /* OEM Version info */
+	kLzsOnlineEditChangesApplied = 0x13,    /* old resource has been replaced */
+	kLzsSaveSystemCmdFinished     = 0x14,    /* LzsEnvSaveSystemCmd has finished */
+	kLzsRestoreSystemCmdFinished     = 0x15,    /* LzsEnvRestoreSystemCmd has finished */
+	kLzsFwLibInfo        = 0x16,     /* firmware library info in receipt buffer */
 
-/* OEM Events ==================================== */
-   kLzsOEMData            = 0xA0,     /*  B.S. 10.11.98 */
+	/* OEM Events ==================================== */
+	kLzsOEMData            = 0xA0,     /*  B.S. 10.11.98 */
 
-   kLzsRemovedWatchID   = 0xA5,     /* Watch-ID in receipt buffer */
-   kLzsRawFileInf        = 0xA6        /* Raw file information in receipt buffer */
+	kLzsRemovedWatchID   = 0xA5,     /* Watch-ID in receipt buffer */
+	kLzsRawFileInf        = 0xA6        /* Raw file information in receipt buffer */
    
 } tLzsEvent;
 
@@ -469,6 +540,17 @@ typedef struct
 
 } tLzsSegTabEntry;
 
+/* struct for table entry in the BL code FB table */
+typedef struct
+{
+   tPlchInst     m_instance; /* number of DS of the FB instance */
+   LZSDWORD      m_dwCodeSizeSys;
+   LZSDWORD      m_dwCodeSizeNor;
+   tPlcMemPtr    m_pSystemModeCode;
+   tPlcMemPtr    m_pNormalModeCode;
+
+} tLzsBLCodeFBTabEntry;
+
 /* struct to manage RTS-internal additional segments */
 typedef struct
 {
@@ -490,52 +572,53 @@ typedef struct
 
 typedef struct             
 {
-    tLzsSegTabEntry    LZSFAR*        pSegTable;
-    LZSWORD                      cSegTabEntrys;
+    tLzsSegTabEntry LZSFAR* pSegTable;
+    LZSWORD                 wSegTabEntries;
     tIpTaskData             TaskData;
-    tLzsClassProcessImage    ProcImg;
-    tPlcPgmNr                nPgmNum;
+    tLzsClassProcessImage   ProcImg;
+    tPlcPgmNr               nPgmNum;
     
-    /* +++ */
-    LZSBYTE   LZSFAR*             RegCS;
-    LZSBYTE   LZSFAR*             RegDS;
-    tLzsMemTask                MemTask;
+    LZSBYTE LZSFAR* RegCS;
+    LZSBYTE LZSFAR* RegDS;
+    LZSBYTE LZSFAR* RegNS;
 
-    LZSBYTE   LZSFAR* RegIP;                      /* current IP */
-    LZSDWORD  LZSFAR* RegInstSP;                  /* current SP Inst-Stack (RetStack) */
-    LZSDWORD  LZSFAR* RegAESP;                    /* current SP AE-Stack */
-    LZSBYTE   LZSFAR* RegExtAE;                   /* Baseaddr. external AE */
-    LZSBYTE   LZSFAR* RegExtAEs;                  /* Baseaddr. external AEs */
-    
-    /* B.S. FHL 98/314 */
-    LZSWORD   SegAEStack;                      
-            
-    /* B.S. 18.05.98 */
-    tPlcTaskType            TaskType;        /* Tasktype */
-    LZSDWORD                    dTimeSpec;        /* Cycletime */
-    LZSDWORD                    dLastTime;        /* Last time this task was run (timertasks only) */
-    LZSWORD                    wPriority;        /* Task priority */
-    
-    /* -fg- 19990511 for sceduling*/
-    LZSWORD                    wCurrentPrio;
-    tPlcTaskState            wTaskState;        
+    tLzsMemTask  MemTask;
+    tPlcTaskType TaskType;
 
-    /* -cd- 011114 CRQ 2001/562 */
-    LZSBYTE   LZSFAR*             RegNS;
+    LZSBYTE LZSFAR*  RegIP;                      /* current IP */
+    LZSDWORD LZSFAR* RegInstSP;                  /* current SP Inst-Stack (RetStack) */
+    LZSDWORD LZSFAR* RegAESP;                    /* current SP AE-Stack */
+    LZSBYTE LZSFAR*  RegExtAE;                   /* Baseaddr. external AE */
+    LZSBYTE LZSFAR*  RegExtAEs;                  /* Baseaddr. external AEs */
+    
+    LZSWORD SegAEStack;                      
+
     tIpRef RegRef;
+
+	LZSWORD               wNumBLCodeFBs;
+	tLzsBLCodeFBTabEntry* pBLCodeFBTable;
 
 } tLzsResourceSegmentTables;
 
-/* Function-Pointer to Firmware-FB */
+/* function pointer to firmware FB */
 typedef LZSBYTE (*tLzsIecFB)(void);
 
-/* Struct for administration of the jump table for FB calls */
+/* struct for administration of the jump table for FB calls */
 typedef struct
 {
    LZSWORD              wFBTabEntrys;  /* Number of enries in jump table */
    tLzsIecFB LZSCONST*  fpIecFBTab;    /* Pointer to jump table */
 
 } tLzsIecFBTab;
+
+/* struct for administration of the firmware library configuration */
+typedef struct
+{
+   LZSCONST LZSCHAR m_strLibName[40];
+   LZSCONST LZSCHAR m_strLibVersion[16];
+   LZSCONST LZSCHAR m_strGuid[40];
+
+} tLzsFwLibDesc;
 
 /* struct to watch and set varaiables */
 typedef enum
@@ -595,6 +678,7 @@ typedef struct
    tPlcSegNr     m_Seg;             /* Segmentnumber */
    tPlcOffset    m_Offs;            /* LZSBYTE-Offset within the segment */
    tPlcByteCount m_Size;            /* Number of bytes to be set */
+   LZSBYTE       m_fMakePersistent;
    LZSBYTE          m_Data[LZS_SIZEOF_SETDATA];
 
 } tLzsSetData;
@@ -637,17 +721,6 @@ typedef struct
    LZSCONST LZSCHAR  *m_pErrStr;
 
 } tLzsErrTabEntry;
-
-/* struct for entries in the retain table */
-typedef struct
-{
-   LZSWORD    m_wTaskNr; /* number of the task that the retain data belongs to */
-   tPlcMemPtr m_pData;   /* pointer to the retain data */
-   LZSWORD    m_wSegNr;  /* number of the data segment where the retain data area is located */
-   LZSWORD    m_wOffset; /* offset in the data segment to the retain data area */
-   LZSWORD    m_wSize;   /* size in bytes of the retain data */
-
-} tLzsRetainTableEntry;
 
 /* Callbackfunktion for passing asynchonous data to the IDE */
 typedef  LZSWORD (*tEventCallback) (LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
@@ -785,15 +858,11 @@ typedef enum
    kLzsStateDwlPrepare  = 0x83,     /* prepare Program download */
    kLzsStateDwlLastSeg  = 0x84,     /* all segments available*/
    kLzsStateDwlComplete = 0x85,     /* Program download finished*/
+   kLzsStateDwlFinished       = 0x86, /* download of PLC program and RawFiles finished (incl. network configuration files like DCF) */
    kLzsStateOnlChangePrepare  = 0x87, /* before applying online changes */
    kLzsStateOnlChangeComplete = 0x88, /* after online changes applied */
-
-   /*----------------------------------------------------------*/
-   /* [SYSTEC/CANopen 2006/10/06 -rs]:                         */
-   /* new state <kLzsStateDwlFinished> inserted                */
-   /*----------------------------------------------------------*/
-   kLzsStateDwlFinished        = 0x86,     /* download of PLC program and RawFiles finished (incl. network configuration files like DCF) */
    kLzsStateStartupTaskFinished = 0x89,
+   kLzsStateDwlFailed   = 0x8A,     /* Program download finished, but failed */
    kLzsStateRestoreDS   = 0xFF      /* Systemstatus "Restore DS"*/
 
 } tLzsSysState;
@@ -882,8 +951,10 @@ typedef struct
 	LZSWORD wSegNum;            /* segment number, for easier debugging - LOCAL DATA, to be set on initialization */
     LZSWORD wNumEntries;        /* number of buffer copies for the segment - LOCAL DATA, to be read from shared memory on initialization */
     LZSWORD* pLatestConsistent; /* pointer to number of latest consistent buffer copy for the segment - points into SHARED MEMORY */
-    LZSWORD* pLocks;            /* pointer to array of lock counters for the buffer copies of the segment (has wNumEntries fields) - points into SHARED MEMORY */
+    LZSBYTE* pReadFlags;        /* pointer to array of read flags for the segment (has wNumCPUs fields, one CPU always uses it own index wSHMCPUIndex) - points into SHARED MEMORY */
     LZSBYTE** pBuffers;         /* pointer to array of pointers to the buffer copies of the segment (has wNumEntries fields) - array is LOCAL DATA, pointers in array point into SHARED MEMORY */
+	LZSWORD wTaskFlags;         /* variable in which all tasks of this CPU store their flags about usage of the buffer */
+	LZSWORD wUsedCopy;          /* number of the buffer copy currently used by the task(s) on this CPU */
 
 } tSHMDCBufferInfo;
 

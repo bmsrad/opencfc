@@ -8,6 +8,7 @@
 /* DESCRIPTION:                                                                  */
 /*********************************************************************************/
 
+#ifdef _FORCE_VARIABLES_
 void  LzsForceInitForceTab (void);
 LZSBYTE  LzsForceAddItem (tLzsPSCmd LZSFAR* pLzsPSCmd_p);
 LZSBYTE  LzsForceDeleteItem (tLzsPSCmd LZSFAR* pLzsPSCmd_p);
@@ -15,5 +16,6 @@ LZSBYTE  LzsForceVariable (tLzsForceItem LZSFAR* pLzsForceItem_p);
 LZSBYTE LzsForce(void);
 
 extern tLzsForceItem  ForceLst_l[LZSMAXWATCH];
+#endif
 
 #endif

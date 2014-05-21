@@ -17,7 +17,7 @@
 void LzsSegInitSegTab(void);
 void LzsSegDeleteSegTables(void);
 
-tLzsSegTabEntry* LzsSegCreateSegTab(LZSWORD cSegTabEntrys_p);
+tLzsSegTabEntry* LzsSegCreateSegTab(LZSWORD wSegTabEntries_p);
 LZSBOOL LzsSegCheckSegNum(tPlcSegNr nSegNum_p);
 LZSBOOL LzsSegCheckSegNumInPrg(tPlcSegNr nSegNum_p,LZSDWORD wPrgNum);
 LZSBYTE LzsSegGetSegType(tPlcSegNr nSegNum_p);
@@ -25,30 +25,30 @@ tPlcSegNr LzsSegGetSegNum(LZSBYTE bSegType_p);
 LZSBYTE LzsSegWriteSegAddr(tPlcSegNr nSegNum_p, LZSBYTE Kind_p, tPlcMemPtr pSeg_p);
 
 tPlcMemPtr LzsSegReadSegAddr(tPlcSegNr nSegNum_p, LZSBYTE Kind_p);
-tPlcMemPtr LzsSegGetAddr(tPlchInst hInst_p, LZSBYTE bSegType_p);                         
-
+tPlcMemPtr LzsSegGetAddr(tPlchInst hInst_p, LZSBYTE bSegType_p);
+tPlcSegNr LzsSegGetNumFromPrg(LZSWORD wPrgNum, tPlchInst hInst_p, LZSBYTE bSegType_p);
 tPlcMemPtr LzsSegGetAddrSeg(tPlchInst hInst_p,tLzsSegTabEntry LZSFAR* pSetTab_p,LZSBYTE bSegType_p);
 tPlcMemPtr LzsSegGetSegFromTable(tLzsResourceSegmentTables LZSFAR* pSegTables, LZSWORD wPrgNum, tPlcSegNr SegNum_p);
 
-tPlcMemPtr LzsSegGetIOMap1(void);
-tPlcMemPtr LzsSegGetIOMap2(void);
-
 /* P0699-specific */
+tPlcMemPtr LzsSegGetHwConfigStation(void);
 tPlcMemPtr LzsSegGetHwConfig(void);
 tPlcMemPtr LzsSegGetSHMConfig(void);
 LZSWORD LzsSegGetSegSize(LZSWORD wSeg);
+LZSINT LzsSegGetFBTableIndex(LZSWORD wNumDS);
+tLzsBLCodeFBTabEntry* LzsSegGetFBTableEntry(LZSWORD wNumDS);
 
 /* */
 /* function to manage the TaskDefinitionTable */
 /* */
-void  LzsTdtInitTaskDefTab (void);
-void  LzsTdtDelTaskDefSeg  (void);
-LZSBYTE  LzsTdtSetTaskDefSeg  (tPlcMemPtr pSeg_p);
-LZSPUBLIC32 tPlcTaskDefTable  LZSFAR*  LZSPUBLIC LzsTdtGetAddr (void); 
-LZSPUBLIC32 tPlcMemPtr LZSPUBLIC LzsTdtSegGetAddr (void);
+void LzsTdtInitTaskDefTab(void);
+void LzsTdtDelTaskDefSeg(LZSBOOL fOnlineEdit);
+LZSBYTE LzsTdtSetTaskDefSeg(tPlcMemPtr pSeg_p);
+LZSPUBLIC32 tPlcTaskDefTable LZSFAR* LZSPUBLIC LzsTdtGetAddr(void); 
+LZSPUBLIC32 tPlcMemPtr LZSPUBLIC LzsTdtSegGetAddr(void);
 
 LZSBYTE	LzsSegSaveSegTables(void);
-LZSPUBLIC32 LZSBOOL LzsTblCopyOldSegments(tPlcMemPtr pCopyTbl_p, LZSWORD *wExpectedSegmentNumber, LZSBOOL fDeleteTable_p);
+LZSPUBLIC32 LZSBYTE LzsTblCopyOldSegments(tPlcMemPtr pCopyTbl_p, LZSWORD *wExpectedSegmentNumber, LZSBOOL fDeleteTable_p);
 void LzsSegDeleteTableOfSegmentTables(tLzsResourceSegmentTables LZSFAR* pSegmentTables);
 
 /* 

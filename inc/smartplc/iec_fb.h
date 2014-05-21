@@ -44,7 +44,7 @@
 
 #if 1
 
-/* these macros do not use byte-wise access, so it is assumes that everything is aligned properly! */
+/* these macros do not use byte-wise access, so it is assumed that everything is aligned properly! */
 #define     GETREAL(addr)           *((float*)(pCurrentProgramData_g->RegDS + addr))
 #define     GETBIT(addr)            (*(pCurrentProgramData_g->RegDS + addr) & 0x01 ? LZSTRUE : LZSFALSE)
 #define     GETDWORD(addr)          *((LZSDWORD*)(pCurrentProgramData_g->RegDS + addr))
@@ -187,7 +187,7 @@ typedef enum
 
 #ifdef __cplusplus
    extern "C" {
-#endif
+#endif 
 
 /*
  * Functions for realizing of standard FB's
@@ -220,10 +220,7 @@ LZSBYTE     ExtFB_ETRC                (void);    /* 20040505mm for tests only; m
 LZSBYTE  IT_FB_Resume_RTS        (void);
 LZSBYTE  IT_Fun_Time_To_Real    (void);
 LZSBYTE     IT_FB_HexDump            (void);
-LZSBYTE IT_FB_GetFBName(void);
-LZSBYTE FB_MYTESTFB1(void);
-
-
+LZSBYTE     Test_FB_TEST_EXC            (void);
 
 #ifdef _FB_COP_
     void     CopFB_LibInitialize         (void);
@@ -280,7 +277,7 @@ LZSBYTE FB_MYTESTFB1(void);
 /*----------------------------------------------------------------------------*/
 /*  Prototypes of EN-controlled FBs                                           */
 /*----------------------------------------------------------------------------*/
-LZSBYTE     Wrapper_Limit_Uint    (void);
+LZSBYTE     Wrapper_Limit_Uint    (void);    
 LZSBYTE  Wrapper_Move_Int    (void);
 LZSBYTE  Wrapper_Add_Int    (void);
 LZSBYTE  Wrapper_Sub_Int    (void);
@@ -592,13 +589,13 @@ LZSBYTE Wrapper_Xor_Dword(void);
 
 #ifdef __cplusplus
    }
-#endif
+#endif 
 
 
 
 LZSBOOL  IecRisingEdgeDetect  (LZSBOOL fSignal_p, LZSWORD wOffsCompSignal_p);
 LZSBOOL  IecFallingEdgeDetect (LZSBOOL fSignal_p, LZSWORD wOffsCompSignal_p);
-#endif
+#endif  
 /* ifndef _IEC_FB_H_*/
 
 

@@ -28,15 +28,36 @@ void LzsGlobalsInit(void);
 extern LZSWORD wNumberOfPrograms_g;
 extern LZSBYTE Error_g; /* global variable for return value <IpCycle, LzsNccCallNc, IpRunBLCode> */
 
+extern LZSBOOL fOnlyOneTaskUsed; /* for optimization of CPU-local data consistency (DC) */
+
 extern LZSWORD wLzsSysFlags_l;
 
 #ifdef _DUMP_FUNCTION_
 extern LZSBYTE DumpBuffer_g[DUMP_BUFFER_SIZE];
 #endif
 
+#ifdef _LZS_ERROR_LOG
+extern tErrorLogControl* pErrorLogControl_g;
+#endif
+
 extern LZSBOOL bProgramModeSet;
 
+extern LZSBOOL fEnableCommunication;
+
 extern tProgSysVersion LZSFAR LoggedInProgSysVersion;
+
+#ifdef _LZS_DWLWITHOUTSTOP_
+extern LZSBOOL fLockReplaceResource_l;
+#endif
+
+extern LZSDWORD dwPersistenceSegCount_g;
+extern LZSDWORD dwCurrentSegCount_g;
+extern LZSBYTE bSaveSystemCmdEventHandle_g;
+extern LZSBYTE bRestoreSystemCmdEventHandle_g;
+extern LZSBOOL fSaveSystemEnabled_g;
+extern LZSBOOL fRestoreSystemEnabled_g;
+extern LZSBOOL fActivateSaveSystem_g;
+extern LZSBOOL fActivateRestoreSystem_g;
 
 #ifdef _IP_PFLOW_
 extern LZSBOOL     LZSNEAR  fPflowEnable_g;      /* Flag Powerflow Ein/Aus */
@@ -76,6 +97,12 @@ extern LZSDWORD crcLookupTable[0x100];
 
 #ifdef IP_TIME
 extern LZSDWORD  LZSNEAR  dCycleStartTime;           /* Hilfsvar. für Zykluszeitmessung */
+#endif
+
+#ifdef USE_T0_WATCHDOG
+extern LZSDWORD dwNumWDEvents; /* counts how many times the watchdog handler was called */
+extern LZSDWORD dwNumWDErrors; /* counts watchdog errors - this is when the watchdog handler was called <NUM_WD_EVENTS_BEFORE_REINIT> times */
+extern tWatchdogError arrayWDErrors[NUM_WD_ERRORS_BEFORE_STOP]; /* records the last watchdog errors - system is stopped after <NUM_WD_ERRORS_BEFORE_STOP> watchdog error within a certain time span */
 #endif
 
 extern tPlcPgmNr        wPflowPgmNr_g;                    /* Program for pflow */
@@ -175,9 +202,8 @@ extern LZSWORD        nLastSegPgm0Linked_g; /* last segment linked from task 0 t
 /*  END Variables that should not be cleared when SAVERAM is used           */
 /*--------------------------------------------------------------------------- */
 
-extern LZSWORD        wNonSleepingTasks_l;
-extern LZSBYTE        bLzsIpEventHandle_l;        /* Handle für CallBack-Funktion */
-extern LZSBYTE        bLzsDumpEventHandle_l;
+extern LZSBYTE bLzsIpEventHandle_l;        /* Handle für CallBack-Funktion */
+extern LZSBYTE bLzsDumpEventHandle_l;
 
 /*-------------------------------------------------------------------------*/
 /* [SYSTEC: 02.05.2003 -rs]: Inserted new variables for executing           */
@@ -229,6 +255,12 @@ extern LZSWORD              wFBTabEntrys_l[LZS_FIRMWARETABS];       /* Anzahl Ei
 extern LZSBYTE              bIecFBErr_l;          /* ErrorCode eines Firmware-FB */
 
 /*--------------------------------------------------------------------------- */
+/*  Variables to handle firmware libraries                    */
+/*--------------------------------------------------------------------------- */
+
+extern LZSWORD wFwLibTabSize_l;
+
+/*--------------------------------------------------------------------------- */
 /*  for forcing                     */
 /*--------------------------------------------------------------------------- */
 
@@ -274,6 +306,15 @@ extern tPlcMemPtr pRetainData_g;
 extern LZSDWORD dwRetainDataSize_g;
 #endif
 
+/*--------------------------------------------------------------------------- */
+/*  for dynamic retain ("DR")                                                 */
+/*--------------------------------------------------------------------------- */
+#ifdef _LZS_DYNAMIC_RETAIN_
+extern tLzsRetainTableEntry* pDRTable_g;
+extern LZSWORD wDRTableEntries_g;
+extern LZSDWORD dwDRResVersion_g;
+#endif
+
 /* handle for watch callback function */
 extern LZSBYTE bLzsWatchEventHandle_g;
 
@@ -285,19 +326,21 @@ extern tLzsResourceSegmentTables LZSFAR* pCurrentProgramData_g;
 /*--------------------------------------------------------------------------- */
 /*  for shared memory (P0699-specific)                                        */
 /*--------------------------------------------------------------------------- */
-
-
 #ifdef USE_SHARED_MEMORY
-/* extern SHM_BUFFER* pShmBuff_g; */
 extern SHM_BUFFER* pShmBuff_g;
+extern LZSDWORD* pShmChecksum_g;
+extern LZSDWORD dwShmChecksum_g;
 #ifdef USE_DATA_CONSISTENCY_SHM
 extern LZSBYTE* pShmDCBuff_g;
-extern LZSDWORD* pShmDCChecksum_g;
 extern LZSBYTE* pShmDCIndex_g;
 extern LZSDWORD dwSHMSize_g; /* (only used by the master CPU) */
-extern LZSDWORD dwShmDCChecksum_g;
 extern SEM_ID shmDCSemId_g;
 #endif
+#endif
+
+#ifdef USE_STATION_HWCONFIG
+extern tSHMHWConfStation* pShmHwBuff_g;
+extern LZSDWORD dwHwConfChecksum_g;
 #endif
 
 extern LZSBYTE staticNullSegment_g[16];
@@ -313,6 +356,8 @@ extern LZSWORD* pExecOrderConfig_g;
 /*  for program execution control (P0699-specific)                            */
 /*--------------------------------------------------------------------------- */
 extern tTaskControl arrayControlSets_g[NUM_TASKS * NUM_MODES];
+extern LZSDWORD arrayModeFlags[NUM_TASKS];
+
 #ifndef _ONE_TASK_ONLY_T1_
 extern tTaskControl* pControlSetI1I;
 extern tTaskControl* pControlSetI1S;
@@ -400,6 +445,12 @@ extern LZSWORD wFirstSegNumSHMDCBuffers;
 extern LZSWORD wLastSegNumSHMDCBuffers;
 
 #ifdef USE_DATA_CONSISTENCY_SHM
+/* number of CPUs participating in shared memory */
+extern LZSWORD wSHMNumCPUs;
+
+/* CPU index within shared memory configuration segment for this CPU */
+extern LZSWORD wSHMCPUIndex;
+
 /* for each shared memory data consistency buffer segment: structure with buffer information to be used at runtime; ALLOCATED and initialized when processing the shared memory configuration */
 extern tSHMDCBufferInfo* array_BufferInfo;
 
@@ -415,8 +466,8 @@ extern LZSBYTE** array_pSHMDCSourceBufferPointers[NUM_TASKS];
 /* for each task: buffer number for the current write buffer; to be set on task start */
 extern LZSWORD array_wSHMDCWriteBuffer[NUM_TASKS];
 
-/* for each task: list of buffer numbers of buffer segments which are locked by the task; ALLOCATED and initialized when processing the shared memory configuration */
-extern LZSWORD* array_pSHMDCLockedBuffers[NUM_TASKS];
+/* for setting write buffers: copies of buffer management data "F<n>" (read flags), used by all tasks (optimization) */
+extern LZSBYTE* pReadFlags_Copy;
 #endif
 
 /*--------------------------------------------------------------------------- */
@@ -431,6 +482,7 @@ extern LZSBYTE bProxyLogicalSlotNumber_g;
 extern int volatile  *temp_addr;
 
 extern int globalError;
+extern int globalRestartTask;
 
 extern unsigned char mode;							/*mode=0: init mode; mode=1: system mode; mode=2: normal mode - please use enum tFBModes from tskScheduler.h (=> kInitMode/kSystemMode/kNormalMode)!*/
 
@@ -455,12 +507,14 @@ extern float	 dps_i7_ta;					/*'ta' value of task I7, in milliseconds ("equivale
 extern float	 dps_i8_ta;					/*'ta' value of task I8, in milliseconds ("equivalent sampling time" configured by the user)*/
 
 
+extern unsigned int dwtask0start;
 
 /*****************************************/
 extern unsigned char board_Msg;     /*this variable defines the board's master mode or slave mode*/
 
-extern unsigned int task_Status_sys;   /*used to define the tasks' status (system mode)*/
-extern unsigned int task_Status_nor;   /*used to define the tasks' status (normal mode)*/
+extern volatile unsigned int task_Status_sys;   /*used to define the tasks' status (system mode)*/
+extern volatile unsigned int task_Status_nor;   /*used to define the tasks' status (normal mode)*/
+extern volatile unsigned int task_Ready;
 
 /* counters for cycle errors */
 extern unsigned int T1CycleErrorCount;
@@ -492,20 +546,29 @@ extern int Task5Para;     /*task cycle parameter for T5*/
 extern unsigned int TicksCounter;    /* count the ticks */
 
 #ifdef SCHEDULER_DEBUG
-extern unsigned int SYSCounter;
-extern unsigned int T1SCounter;
-extern unsigned int T1NCounter;
-extern unsigned int T2SCounter;
-extern unsigned int T2NCounter;
-extern unsigned int T3SCounter;
-extern unsigned int T3NCounter;
-extern unsigned int T4SCounter;
-extern unsigned int T4NCounter;
-extern unsigned int T5SCounter;
-extern unsigned int T5NCounter;
+extern unsigned int SYSCounterStart;
+extern unsigned int SYSCounterEnd;
+extern unsigned int T1SCounterStart;
+extern unsigned int T1SCounterEnd;
+extern unsigned int T1NCounterStart;
+extern unsigned int T1NCounterEnd;
+extern unsigned int T2SCounterStart;
+extern unsigned int T2SCounterEnd;
+extern unsigned int T2NCounterStart;
+extern unsigned int T2NCounterEnd;
+extern unsigned int T3SCounterStart;
+extern unsigned int T3SCounterEnd;
+extern unsigned int T3NCounterStart;
+extern unsigned int T3NCounterEnd;
+extern unsigned int T4SCounterStart;
+extern unsigned int T4SCounterEnd;
+extern unsigned int T4NCounterStart;
+extern unsigned int T4NCounterEnd;
+extern unsigned int T5SCounterStart;
+extern unsigned int T5SCounterEnd;
+extern unsigned int T5NCounterStart;
+extern unsigned int T5NCounterEnd;
 #endif
-
-
 
 /*--------------------------------------------------------------------------- */
 /*  for single-CPU data consistency (P0699-specific)                          */

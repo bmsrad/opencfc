@@ -52,7 +52,7 @@ LZSWORD LzsGetProgramIndex(tPlcPgmNr nPgmNum_p);
 LZSWORD LzsGetProgramIndexFromTable(tPlcPgmNr nPgmNum_p,tPlcTaskDefTable LZSFAR* pTDTab_p);
 
 LZSBYTE  LzsDwlStartResource      (void);
-LZSBYTE  LzsDwlDownloadCompletion (void);
+LZSBYTE  LzsDwlDownloadCompletion (LZSBOOL fOnlineEdit);
 LZSBYTE  LzsDwlAttachResourceGlobalSegments(void);
 void  LzsDwlSetupPISegment(tPlcTaskDefTable LZSFAR* pTDTab_p);
 

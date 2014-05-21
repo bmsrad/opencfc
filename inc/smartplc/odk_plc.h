@@ -20,13 +20,11 @@
 
 
 
-
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
 /*  Definition of Base-Types                                             */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
-
 
 
 
@@ -38,14 +36,11 @@
 
 
 
-
-
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
 /*  Definition of project specific types                                   */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
-
 
 /*--------------------------------------------------------------------------- */
 /* Segmenttypes */
@@ -90,7 +85,7 @@ typedef enum
    /* ef 20040505 */
    kPlcOemVarInfoTable     = 0x27, /* additional Oem variables */
 
-   kPlcSegNativeCode2      = 0x28 ,/* native code following segment */
+   kPlcSegNativeCode2      = 0x28, /* native code following segment */
    kPlcSegVarTable2	       = 0x29, /* VarTable */
    
    /*smart var table*/
@@ -98,16 +93,17 @@ typedef enum
    kPlcSegSmartVartable2   = 0x2b,
    kPlcSegCopyVarList	   = 0x2c,
    
-   /**/
-   kPlcSegIOMap1					 = 0x2d,	/* P533 */
-   kPlcSegIOMap2					 = 0x2e,	/* P533 */
-   kPlcSegIOMap3					 = 0x2f,
-
-   /* hle 20070723 */
-   kPlcSegErrorLog         = 0x30,/* segment to store error-log information */
+   /* error log/exception buffer/system error panel */
+   kPlcSegErrorLog         = 0x30, /* pseudo-segment/identifier for error log information */
+   kPlcSegExceptionBuffer  = 0x32, /* pseudo-segment/identifier for exception buffer information */
+   kPlcSegSystemErrorPanel = 0x33, /* pseudo-segment/identifier for system error panel */
+   kPlcSegErrorCtrl        = 0x34, /* pseudo-segment/identifier for error log control structure */
    
    kPlcSegCopyVarList2	   = 0x31,
     
+   kPlcSegBLCodeSys        = 0x35, /* P0699-specific; for BL code of user function blocks */
+   kPlcSegBLCodeNor        = 0x36, /* P0699-specific; for BL code of user function blocks */
+
    kPlcSegNcHelp           = 0x38,
    kPlcSegByRefInfo        = 0x39, /* link info for external variables */
    kPlcSegNativeCode3	   = 0x40, /* segment with patch table for far-access and call optimization */
@@ -144,6 +140,7 @@ typedef enum
    /* [SYSTEC 09.05.2005 -rs] renamed <kPlcSegReserved5> in <kPlcSegSneBinCode> */
    kPlcSegSneBinCode = 0xF5,       /* segments with system native extension code for the CPU (native maschine code) */
    kPlcSegDcfAssignment  = 0xF6,   /* Powermap DCF assignment segment */
+
 /*--------------------------------------------------------------------------- */
 /* OEM-Segmenttypes */
 /*--------------------------------------------------------------------------- */
@@ -153,6 +150,7 @@ typedef enum
    kPlcSegShmConfig  = 0xF9,        /* P0699-specific; for rack-global shared memory configuration (data consistency) */
    kPlcSegShmDCVars  = 0xFA,        /* P0699-specific; for all segments containing shared memory data consistency buffers */
    kPlcSegStaticNull = 0xFB,        /* P0699-specific; static null area for unresolved shared memory variables */
+   kPlcSegHwConfigStation = 0xFC,   /* P0699-specific; for hardware configuration information */
 
    kPlcSegUndef      = 0xFF         /* Error detection */
 
@@ -188,7 +186,6 @@ typedef enum
 
 } tPouType;
 
-  
 typedef packed struct 
 {
 	/* see also LzsMemGetLinkerTableEntry in szm.c and 
@@ -198,7 +195,6 @@ typedef packed struct
     LZSWORD m_wIniSegNr;
 
 } tSegLinkerTableEntry;
-
 
 typedef packed struct 
 {
@@ -243,8 +239,8 @@ typedef enum
     kTaskStateSleep         = 0x01,
     kTaskStateRun           = 0x02,
     kTaskStateInterrupted   = 0x04
-} tPlcTaskState;
 
+} tPlcTaskState;
 
 /* tSksVersion and tLzsVersion are replaced by this definition*/
 typedef packed struct
@@ -252,7 +248,6 @@ typedef packed struct
    LZSDWORD        m_TimeStamp;        /* Timestamp */
 
 } tPlcVersion;
-
 
 typedef packed struct
 {
@@ -263,7 +258,6 @@ typedef packed struct
 
 } tPlcIpVer;
 
-
 typedef packed struct
 {
    LZSWORD         m_cInstStackSize;   /* Number of entries in InstanceStack */
@@ -272,7 +266,6 @@ typedef packed struct
    LZSWORD         m_cExtAESize;       /* Segmentsize external AE */
 
 } tPlcStackSizes;
-
 
 typedef packed struct   
 {
@@ -283,7 +276,6 @@ typedef packed struct
  
 } tPlcPIValues;
 
-
 typedef packed struct
 {
    LZSWORD         m_cSize;            /* Segmentsize net image */
@@ -291,8 +283,6 @@ typedef packed struct
    tPlcOffset   m_StartOutput;      /* StartOffset output net image */
 
 } tPlcNIValues;
-    
-      
 
 typedef packed struct
 {
@@ -373,8 +363,6 @@ typedef packed struct
    
 } tPlcTaskDefEntry; /*size 106*/
 
-
-
 /* DtPlcTaskDefTable is replaced by this definition*/
 typedef packed struct
 {
@@ -431,16 +419,20 @@ typedef packed struct
 
 } tPlcTaskDefSegment;
 
+/* struct for entries in the retain table */
+typedef struct
+{
+   LZSWORD    m_wTaskNr; /* number of the program that the retain data belongs to */
+   tPlcMemPtr m_pData;   /* pointer to the retain data */
+   LZSWORD    m_wSegNr;  /* number of the data segment where the retain data area is located */
+   LZSWORD    m_wOffset; /* offset in the data segment to the retain data area */
+   LZSWORD    m_wSize;   /* size in bytes of the retain data */
 
-
-
+} tLzsRetainTableEntry;
 
 #define tLzsProjectData tPlcTaskDefTable /* Compatibility */
 
-
-
 /* ae 1999/04/30: entries of the IO-configuration table */
-
 typedef struct
 {
     LZSDWORD                dwHardwareAddress;          /* Node ID or busaddress */

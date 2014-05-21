@@ -14,6 +14,7 @@ LZSBYTE LzsDwlWithoutStop(tLzsPSCmd LZSFAR* pLzsPSCmd_p);
 LZSBYTE LzsDwlWithoutStopCont(tLzsPSCmd LZSFAR* pLzsPSCmd_p);
 
 LZSBYTE LzsDwlWithoutStopReplaceRes(void);
+LZSBOOL LzsDwlWithoutStopIsReplaceActive(void);
 
 #endif
 

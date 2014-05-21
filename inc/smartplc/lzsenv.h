@@ -10,24 +10,29 @@
 /*********************************************************************************/
 
 typedef void (LZSPUBLIC *tLzsEnvSerialize) (LZSBYTE LZSFAR* pSeg_p,LZSWORD wSize_p,LZSWORD wSegNum_p,LZSWORD wProgNum_p,LZSDWORD dwUserData_p);
- 
+
 LZSPUBLIC32 LZSBYTE  LZSPUBLIC LzsEnvInitialize (void);
 LZSPUBLIC32 LZSBYTE  LZSPUBLIC LzsEnvShutDown (void);
+
+#ifdef _LZS_ERROR_LOG_LED_DISPLAY
+void LzsEnvUpdateLedDisplay(void);
+#endif
 
 /* [SYSTEC: 04.05.2005 -rs]: function newly inserted */
 LZSPUBLIC32  LZSBYTE  LZSPUBLIC LzsEnvProcess (void);
 
 #ifdef _IP_BREAKPOINTS_
 void LzsEnvBreakPointReached(
-    tIpBreakPoint LZSFAR* pBreakPoint_p    /* [i] Pointer to breakpoint struct */
-    );
+	tIpBreakPoint LZSFAR* pBreakPoint_p	/* [i] Pointer to breakpoint struct */
+	);
 #endif
-    
+
 void LzsEnvDisableAllOutputs(LZSWORD wMode);
 
 LZSBYTE LzsEnvOEMCommand(LZSBYTE bConnectionId_p, LZSINT iCmd_p,LZSDWORD dwValue_p);
+
 /*
- * functions to adapt to different enviroments
+ * functions to adapt to different environments
  */
 LZSPUBLIC32 void  LZSPUBLIC LzsEnvResetSystem (LZSBYTE bRestartMode_p);
 void  LzsEnvActivateBkgTask(void);
@@ -35,9 +40,9 @@ void LzsEnvSchedule(void);
 void LzsEnvStartCmd(LZSBYTE bCommand_p);
 void LzsEnvCommunicationInterrupted(LZSBYTE bConnectionId_p, LZSDWORD dElapsedTime_p);
 
-#ifdef _USE_WATCHDOG_
-void  LzsEnvResetWatchdogTimeout (void); 
-#endif
+LZSDWORD LzsEnvGetWatchdogTimeout(void);
+
+void LzsEnvGetRegisters(LZSDWORD* pArrayRegs, void* pExceptionInfo);
 
 #ifdef _LZS_OEM_VERSIONHANDLING_
 /* [SYSTEC: 13.12.2001 -rs]: prototype inserted again */
@@ -67,10 +72,16 @@ void LzsEnvRestoreClose(void);
 void LzsEnvSaveClose(void);
 void LzsEnvSaveByte(LZSBYTE b);
 LZSBYTE LzsEnvRestoreByte(void);
+LZSBOOL LzsEnvClearData(LZSCONST LZSCHAR * pszStorageName_p);
 
-#ifdef _LZS_SAVESYSTEMCMD_
-LZSBYTE LzsEnvSaveSystemCmd(void);
-#endif
+LZSPUBLIC32 LZSBYTE LZSPUBLIC LzsEnvSaveSystemCmd(void);
+LZSPUBLIC32 LZSBYTE LZSPUBLIC LzsEnvRestoreSystemCmd(void);
+LZSPUBLIC32 LZSBOOL LZSPUBLIC LzsEnvGetActivateSaveSystem(void);
+LZSPUBLIC32 LZSBOOL LZSPUBLIC LzsEnvGetActivateRestoreSystem(void);
+LZSPUBLIC32 void LZSPUBLIC LzsEnvResetActivateSaveSystem(void);
+LZSPUBLIC32 void LZSPUBLIC LzsEnvResetActivateRestoreSystem(void);
+LZSWORD LzsEnvSaveSystemCmdCallback(LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
+LZSWORD LzsEnvRestoreSystemCmdCallback(LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
 
 /*
  * functions to implement retain
@@ -82,11 +93,20 @@ LZSPUBLIC32 LZSBOOL LZSPUBLIC LzsEnvReadRetain(void);
 LZSCONST LZSCHAR* LzsEnvGetRetainStorageName(LZSBYTE bParam);
 #endif
 
+/*
+ * functions to implement dynamic retain
+ */
+#ifdef _LZS_DYNAMIC_RETAIN_
+LZSBOOL LzsEnvSaveDynamicRetain(void);
+LZSBOOL LzsEnvLoadDynamicRetain(void);
+LZSCONST LZSCHAR* LzsEnvGetDynamicRetainStorageName();
+#endif
+
 LZSBYTE LzsEnvHardwareRun(void);
 void LzsEnvBeginDwlResource(void);
 
-/* 
- * raw file download 
+/*
+ * raw file download
  */
 #ifdef _LZS_DWL_RAWFILE_
 LZSBYTE LzsEnvDwlRawFile(tLzsPSCmd LZSFAR* pLzsPSCmd_p);
@@ -102,9 +122,9 @@ LZSBYTE LzsEnvDeleteRawFile(LZSCONST LZSCHAR* pszRawFilePath);
  *    Clock
  */
 LZSPUBLIC32 LZSDWORD LzsEnvGetTickCount(void);
-#ifdef ENABLE_PERFORMANCE_MONITORING
 LZSPUBLIC32 LZSDWORD LzsEnvGetPerformanceTickCount(void);
 LZSPUBLIC32 float LzsEnvGetPerformanceDiffTime(LZSDWORD tick1, LZSDWORD tick2);
+#ifdef ENABLE_PERFORMANCE_MONITORING
 LZSPUBLIC32 void LzsEnvStartPerformanceMeasurement(tPerformanceData* pPerformanceData);
 LZSPUBLIC32 void LzsEnvStopPerformanceMeasurement(tPerformanceData* pPerformanceData);
 #endif
@@ -117,7 +137,6 @@ void LZSFAR* LzsEnvMemAlloc(LZSDWORD dwMemSize);
 void LzsEnvMemFree(void LZSFAR* pMem);
 LZSBOOL IsInIecMemory(void* pMem);
 void LzsEnvMemGetInfo(LZSDWORD LZSFAR* pdwMaxMem_p, LZSDWORD LZSFAR* pdwUsedMem_p);
-void LZSFAR* LzsEnvMemAllocNoSegBoundary (LZSDWORD dMemSize);
 LZSPUBLIC32 void LZSPUBLIC LzsEnvMemInitialize(void);
 LZSPUBLIC32 void LZSPUBLIC LzsEnvClearMemory(void);
 #ifdef USE_SHARED_MEMORY
@@ -131,6 +150,7 @@ void LzsEnvMemTrace(void);
 void LZSFAR* LzsEnvSpecialMalloc(LZSDWORD dwMemSize, tPlcSegType SegType);
 void LzsEnvSpecialFree(void LZSFAR* pMem,tPlcSegType SegType);
 void LzsEnvMemDump(void);
+void LzsEnvSegTblDump(void);
 LZSBOOL LzsEnvMemCheck(void);
 
 void LzsEnvInitFlash(void);
@@ -153,7 +173,7 @@ LZSBYTE LzsEnvHistInitElemBuffer(LZSWORD wID_p);
 void LzsEnvHistFreeElemBuffer(LZSWORD wID_p);
 void LzsEnvHistRecord(LZSWORD wPgmIndex_p);
 LZSBYTE LzsEnvHistGetRange(LZSWORD wCount_p, tPlcMemPtr pListOfIDs_p,
-                           tPlcMemPtr *pResult_p, LZSDWORD *pdwResultSize_p, 
+                           tPlcMemPtr *pResult_p, LZSDWORD *pdwResultSize_p,
                            void (**ppFuncFreeResult_p)(tPlcMemPtr pResult_p, LZSDWORD dwSize_p)
                            );
 
@@ -162,7 +182,7 @@ LZSBOOL LzsEnvHistLockMutex(void);
 void LzsEnvHistUnlockMutex(void);
 #endif /* _LZS_HISTDATA_LOCKING_ */
 
-#endif /* _LZS_HISTDATA_ */                 
+#endif /* _LZS_HISTDATA_ */
 
 #ifdef _LZS_OEMVERSINFO_
              void LzsEnvGetOemVersion(tOemVersion* sOemVersion_p);
@@ -197,25 +217,53 @@ LZSBYTE  SysNetIoStop    (void);
 LZSPUBLIC32 LZSBYTE  SysNetIoProc    (void);
 LZSPUBLIC32 LZSBYTE  SysNetIoErrInit (void);
 
+LZSDWORD GetSegmentChecksum(tPlcMemPtr pSeg, LZSWORD wSize);
+
+/*
+ *  Error/exception handling
+ */
+void LzsEnvHandleError(LZSDWORD dwCategory, LZSWORD wErrorCode, LZSWORD wParameter2, LZSWORD wParameter3, LZSWORD wParameter4);
+void LzsEnvHandleException(LZSDWORD dwExceptionVector);
+
 /* P0699-specific */
-LZSBYTE LzsEnvProcessHwConfig(void);
-LZSBYTE LzsEnvApplyExecutionOrder(LZSWORD* pStart);
+LZSBYTE LzsEnvProcessHwConfig(LZSBOOL fOnlineEdit);
+LZSBYTE LzsEnvApplyExecutionOrder(LZSWORD* pStart, LZSBOOL fOnlineEdit);
+
+/*
+ *  Hardware detection and configuration
+ */
+#ifdef USE_STATION_HWCONFIG
+#ifdef USE_STATION_HWCONFIG_CRC_CHECK
+LZSBOOL CheckHwConfigValid();
+#endif
+LZSBYTE LzsEnvDetectHwModule(LZSDWORD dwTypeID, LZSBYTE* pConfigData);
+LZSBYTE LzsEnvConfigureHwModule(LZSDWORD dwTypeID, LZSBYTE* pConfigData);
+#endif
 
 /* reboot the PLC, e.g. after firmware download */
 LZSBYTE LzsEnvRebootPlc();
 
+/*
+ *  Shared memory check
+ */
+#ifdef USE_SHARED_MEMORY
+LZSBOOL CheckSHMConfigValid();
+#endif
+
+/*
+ *  Data consistency
+ */
 #ifdef USE_DATA_CONSISTENCY_SHM
-LZSBYTE LzsEnvProcessSHMConfig(void);
+LZSBYTE LzsEnvProcessSHMConfig(LZSBOOL fOnlineEdit);
 LZSWORD GetLastSHMDCSegment(LZSWORD* pStart);
 LZSWORD GetNumClientsForSHMDCSegment(LZSWORD wSeg, LZSWORD* pStart);
-LZSDWORD GetSHMDCSegmentChecksum(tPlcMemPtr pSHMConfigSeg, LZSWORD wSize);
 LZSDWORD CalcTotalSHMDCMemSize(LZSWORD* pStart);
 LZSBYTE InitSHMDCMemory(LZSWORD* pStart);
 void ClearSHMDCMemory();
+LZSBYTE SetOwnCPUIndex(LZSWORD* pStart);
 LZSBYTE SetOwnBuffers(LZSWORD* pStart);
 LZSBYTE SetSourceBuffers(LZSWORD* pStart);
 LZSBYTE SetBufferInfo();
-LZSBOOL CheckSHMDCValid();
 void SetSHMDCWriteBuffer(LZSWORD wTask);
 void SetSHMDCReadBuffers(LZSWORD wTask);
 void PublishSHMDCWriteBuffer(LZSWORD wTask);
@@ -240,10 +288,13 @@ void UnlockDCBuffers(LZSWORD wTask);
 #define BI_CONDITION_EQ			 2
 #define BI_CONDITION_SO			 3
 
-#define ADDI(D, A, Imm) ((14 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | Imm)
-#define ADDIS(D, A, Imm) ((15 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | Imm)
-#define ORI(A, S, Imm) ((24 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | Imm)
+#define ADDI(D, A, Imm) ((14 << 26) | ((LZSDWORD)D << 21) | ((LZSWORD)A << 16) | (((LZSDWORD)Imm)&0xffff) )
+#define ADDIS(D, A, Imm) ((15 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | (((LZSDWORD)Imm)&0xffff) )
+#define ORI(A, S, Imm) ((24 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | (((LZSDWORD)Imm)&0xffff) )
+#define ORX(S, A, B)  ((31 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | ((LZSDWORD)B << 11) | 888)
 #define ADDX(D, A, B) ((31 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | ((LZSDWORD)B << 11) | 532)
+#define STBX(S, A, B) ((31 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | ((LZSDWORD)B << 11) | 430)
+#define LBZX(D, A, B) ((31 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | ((LZSDWORD)B << 11) | 174)
 
 #define STW(S, A, d)  ((36 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | (LZSWORD)d)
 #define STH(S, A, d)  ((44 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | (LZSWORD)d)
@@ -251,6 +302,7 @@ void UnlockDCBuffers(LZSWORD wTask);
 #define LWZ(D, A, d)  ((32 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | (LZSWORD)d)
 #define LHZ(D, A, d)  ((40 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | (LZSWORD)d)
 #define LBZ(D, A, d)  ((34 << 26) | ((LZSDWORD)D << 21) | ((LZSDWORD)A << 16) | (LZSWORD)d)
+
 
 #define STWU(S, A, d) ((37 << 26) | ((LZSDWORD)S << 21) | ((LZSDWORD)A << 16) | (LZSWORD)d)
 /*
@@ -263,8 +315,12 @@ void UnlockDCBuffers(LZSWORD wTask);
 #define MFLR(r) ( (LZSDWORD) 0x7C0802A6 | (LZSDWORD) r)
 #define MTLR(r) ( (LZSDWORD) 0x7C0803A6 | (LZSDWORD) r)
 
+/*#define CMP(cr, A, B)			((0x1f<<26) | (cr<<23)	         | (A<<16) | (B<<11))*/
+#define CMP(cr, A, B)			((0x1f<<26) | (cr<<23) | (A<<16) | (B<<11))
 #define CMPI(cr, A, Imm) 		((0x0B<<26) | (cr<<23) | (1<<21) | (A<<16) | Imm)
-#define BCX(bo, bi, Addr)		((0x10<<26) | (bo<<21) | (bi<<16) | (Addr<<2))
+#define BCX(bo, bi, Addr)		((0x10<<26) | (bo<<21) | (bi<<16) | (((LZSDWORD)Addr<<2)&0xFFFC))
+#define BX(LI)					((18<<26) | ( ((LZSDWORD)LI << 2) & 0x3FFFFFC) )
+
 
 #define NANDX(S, A, B)			((0x1F<<26) | (S<<21) | (A<<16) | (B<<11) | 0x3B8)
 #define ANDI(S, A, Imm)			((0x1C<<26) | (S<<21) | (A<<16) | Imm)

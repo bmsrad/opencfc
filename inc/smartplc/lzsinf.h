@@ -27,11 +27,11 @@ LZSCONST LZSCHAR* LzsGetLzsErrorString(LZSBYTE bLzsErrCode_p);
 
 void LzsInfoEvalCapabilities(void);
 
-LZSBYTE  LzsInfGetResVersion  (LZSBYTE bConnectionId_p);
-LZSBYTE  LzsInfGetPlcVersion  (LZSBYTE bConnectionId_p);
+LZSBYTE LzsInfGetResVersion(LZSBYTE bConnectionId_p);
+LZSBYTE LzsInfGetPlcVersion(LZSBYTE bConnectionId_p);
+LZSBYTE LzsInfGetFwLibInfo(LZSBYTE bConnectionId_p);
 
-/* [SYSTEC: 21.06.2002 -rs]: function inserted */
-LZSWORD  LzsInfErrCallback (LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
-LZSWORD  LzsInfExtCapCallback (LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
+LZSWORD LzsInfErrCallback(LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
+LZSWORD LzsInfExtCapCallback(LZSBYTE bConnectionId_p, tPlcMemPtr pBuff_p, LZSWORD wBuffSize_p, LZSBYTE bMode_p);
 
 #endif /*_LZSINF_H_*/

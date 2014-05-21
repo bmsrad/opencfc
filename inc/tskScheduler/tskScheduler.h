@@ -12,7 +12,7 @@
 #define		_TSK_SCHEDULER_H_
 
 
-
+void plcIdle(void);
 void task0fun(void);
 
 #ifndef _ONE_TASK_ONLY_T1_
@@ -24,8 +24,7 @@ void task2fun_nor(void);
 void task3fun_nor(void);
 void task4fun_nor(void);
 void task5fun_nor(void);
-void task6fun_nor(void);
-#if 0
+/*
 void taskIntFun_I1(void);
 void taskIntFun_I2(void);
 void taskIntFun_I3(void);
@@ -34,7 +33,30 @@ void taskIntFun_I5(void);
 void taskIntFun_I6(void);
 void taskIntFun_I7(void);
 void taskIntFun_I8(void);
-#endif
+*/
+int tidTaskMain;
+
+int tidCyclicTask_sys;
+
+int tidTask1_nor;
+int tidTask2_nor;
+int tidTask3_nor;
+int tidTask4_nor;
+int tidTask5_nor;
+
+int tidTaskInt1;
+int tidTaskInt2;
+int tidTaskInt3;
+int tidTaskInt4;
+int tidTaskInt5;
+int tidTaskInt6;
+int tidTaskInt7;
+int tidTaskInt8;
+
+int tidTask0;
+
+int tidTaskComm;
+
 #else
 
 /*void task1fun_sys_nor(void);*/
@@ -78,7 +100,10 @@ typedef enum
 	kT2Task = 9,
 	kT3Task = 10,
 	kT4Task = 11,
-	kT5Task = 12
+	kT5Task = 12,
+	kSYSTask = 13,
+	kMainTask = 14,
+	kCommTask = 15
 
 } tSystemTasks;
 
@@ -100,6 +125,7 @@ typedef enum
 #define SIZEOF_COMPATIBILITY_KEY_NC     8
 #define SIZEOF_JMP_INSTRUCTION_NC       4
 #define ALTTASKSCHEME_COMPATIBILITY_KEY 0x117B8A5F
+#define USERFB_COMPATIBILITY_KEY        0x2C625889
 
 #define I1I_OFFSET (SIZEOF_COMPATIBILITY_KEY)
 #define I1I_OFFSET_NC (SIZEOF_COMPATIBILITY_KEY_NC)
@@ -263,6 +289,14 @@ typedef enum
 #define T5CE_OFFSET_NC (SIZEOF_COMPATIBILITY_KEY_NC + 73 * SIZEOF_JMP_INSTRUCTION_NC)
 #define T5FE_OFFSET (SIZEOF_COMPATIBILITY_KEY + 74 * SIZEOF_JMP_INSTRUCTION)
 #define T5FE_OFFSET_NC (SIZEOF_COMPATIBILITY_KEY_NC + 74 * SIZEOF_JMP_INSTRUCTION_NC)
+
+/* for user FBs executed in BL code */
+#define FB_I_OFFSET (SIZEOF_COMPATIBILITY_KEY)
+#define FB_I_OFFSET_NC (SIZEOF_COMPATIBILITY_KEY_NC)
+#define FB_S_OFFSET (SIZEOF_COMPATIBILITY_KEY + 1 * SIZEOF_JMP_INSTRUCTION)
+#define FB_S_OFFSET_NC (SIZEOF_COMPATIBILITY_KEY_NC + 1 * SIZEOF_JMP_INSTRUCTION_NC)
+#define FB_N_OFFSET (SIZEOF_COMPATIBILITY_KEY + 2 * SIZEOF_JMP_INSTRUCTION)
+#define FB_N_OFFSET_NC (SIZEOF_COMPATIBILITY_KEY_NC + 2 * SIZEOF_JMP_INSTRUCTION_NC)
 
 /*--------------------------------------------------------------------------- */
 /* definitions used for program lists                                         */
