@@ -72,7 +72,7 @@ IMPORT UINT32 univBaseAdrs;
 void UpdateWatchdog();
 void WatchdogHandler();
 #endif
-SEM_ID SocketCreatOK;/*jyw create socket before restore program*/
+
 SEM_ID taskCyclicSemID_sys;
 
 SEM_ID task1SemID_nor;
@@ -93,7 +93,7 @@ SEM_ID int8SemID;
 SEM_ID task0SemID;
 
 SEM_ID* tcpTxSemID;
-unsigned char getCharInfo = 0;
+ unsigned char getCharInfo=0;
 int startplcmain(void)
 {
 /*****************************************************
@@ -125,8 +125,6 @@ int startplcmain(void)
 	task3SemID_nor = semBCreate (SEM_Q_FIFO, SEM_EMPTY);
 	task4SemID_nor = semBCreate (SEM_Q_FIFO, SEM_EMPTY);
 	task5SemID_nor = semBCreate (SEM_Q_FIFO, SEM_EMPTY);
-	SocketCreatOK = semBCreate (SEM_Q_FIFO, SEM_EMPTY);
-
 #if 0
 	int1SemID = semBCreate (SEM_Q_FIFO, SEM_EMPTY);
 	int2SemID = semBCreate (SEM_Q_FIFO, SEM_EMPTY);
@@ -197,7 +195,9 @@ int startplcmain(void)
 	tidTaskInt8 = taskSpawn ("tTaskInt8", INTERRUPT8_PRIO, TASK_FLAGS, STACK_SIZE,
 	        (FUNCPTR) taskIntFun_I8,0,0,0,0,0,0,0,0,0,0);
 #endif
+#if 0
 	taskSpawn("tPlcIdle", 255, TASK_FLAGS, STACK_SIZE, (FUNCPTR) plcIdle,0,0,0,0,0,0,0,0,0,0);
+#endif
 #ifdef USE_T0_WATCHDOG
 	if ((t0WatchDogId = wdCreate()) == NULL)
 	{
@@ -248,7 +248,7 @@ int startplcmain(void)
 *  start SmartPLC
 *****************************************************/
     logMsg("SmartPLC start\n",0,0,0,0,0,0);
-
+#if 1
     /* handle persistency and retain variables */
     #ifndef _LZS_NO_PERSISTENCE_
 
@@ -260,10 +260,6 @@ int startplcmain(void)
 
 	#endif
 	#endif
-
-	/*LzsRestoreSystem(LzsEnvGetStorageName());*/
-#if 1 /*jyw*/
-	/* semTake(SocketCreatOK, WAIT_FOREVER); */
 
 	if (getCharInfo == 0) /* from startup safety function */
 	{
@@ -304,7 +300,7 @@ int startplcmain(void)
 		}
 	}
     #endif
-#endif /*jyw*/
+#endif
 	/*severStart();*/
 
 	#ifdef _MASTER_CPU_
@@ -323,7 +319,7 @@ int startplcmain(void)
 	{
 		LzsWarmStart();
 	}
-	semGive(SocketCreatOK);/*jyw 20140514*/
+
 /*****************************************************
 *  end of main
 *****************************************************/

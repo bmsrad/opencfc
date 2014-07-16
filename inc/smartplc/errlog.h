@@ -20,7 +20,7 @@ typedef struct
 {
 	LZSDWORD dwMagic;
 	LZSDWORD dwMagic2;
-
+	
 	tPlcMemPtr pErrorLogSegment;       /* pointer to the beginning of the error log segment (header) */
 	tPlcMemPtr pNextFreeErrorLogEntry; /* pointer to the next free error log entry */
 	LZSBOOL fErrorLogInit;             /* flag showing if error log is initialized */

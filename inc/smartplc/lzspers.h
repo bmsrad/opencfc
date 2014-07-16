@@ -10,7 +10,6 @@
 
 LZSPUBLIC32 LZSBYTE LZSPUBLIC LzsSaveSystem(LZSCONST LZSCHAR * pszStorageName_p);
 LZSPUBLIC32 LZSBYTE LZSPUBLIC LzsRestoreSystem (LZSCONST LZSCHAR * pszStorageName_p);
-LZSPUBLIC32 LZSBYTE LZSPUBLIC LzsRestoreSystem_old (LZSCONST LZSCHAR * pszStorageName_p);/*jyw 20140514*/
 LZSDWORD LzsGetPersistenceLength(void);
 LZSDWORD LzsGetPersistenceSegCount(void);
 

@@ -39,6 +39,7 @@
 #include <smMemLib.h>
 #include <smObjLib.h>
 
+#undef _FORCE_VARIABLES_
 #ifdef _LZS_ERROR_LOG_CPUEXCEPTIONS
 #include <esf.h>
 #endif
@@ -1920,7 +1921,7 @@ LZSBOOL LzsEnvSaveOpen(LZSCONST LZSCHAR * pszStorageName_p,    /*[i] optional na
 {
 	/* reset byte counter */
     dwByteCounter = 0;
-
+    printf("Persistency: SaveOpen %s!\n",pszStorageName_p);
 	/* open/create persistency file */
 	iecProgFd = open(pszStorageName_p, O_CREAT | O_RDWR, 0644);
 
@@ -1949,7 +1950,7 @@ LZSBOOL LzsEnvRestoreOpen(LZSCONST LZSCHAR * pszStorageName_p /*[i] optional nam
 {
 	/* open persistency file */
 	iecProgFd = open(pszStorageName_p, O_RDONLY, 0644);
-
+	printf("Persistency: RestoreOpen %s!\n",pszStorageName_p);
 	if (iecProgFd == ERROR)
 	{
 		LZSTRACE0("Persistency: RestoreOpen failed!\n");
