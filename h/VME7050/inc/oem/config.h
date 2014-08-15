@@ -52,8 +52,8 @@
 /* only one of the     */
 /* following           */
 /*---------------------*/
-#define   _LZS_NO_PERSISTENCE_
-#undef  _LZS_PERSISTENCE_DISKLIKE_
+#undef   _LZS_NO_PERSISTENCE_
+#define  _LZS_PERSISTENCE_DISKLIKE_
 #undef   _LZS_STATIC_PERSISTENCE_
 #undef   _LZS_PERSISTENCE_POINTER_
 #undef   _LZS_PERSISTENCE_SAVERAM_
@@ -75,8 +75,8 @@
 /* setting variables online)                    */
 /* only useful in combination with persistence! */
 /*----------------------------------------------*/
-#undef _LZS_DYNAMIC_RETAIN_
-#define NUM_DR_ENTRIES 32
+#define _LZS_DYNAMIC_RETAIN_
+#define NUM_DR_ENTRIES 1024
 
 /*----------------------*/
 /* define the size in   */
@@ -114,7 +114,7 @@
 #define DWL_RAWFILE_MAX_PATH 64
 #define DWL_RAWFILE_MAX_FILENAME 32
 
-#define LZSMAXWATCH 32   /* number of entries in watch table */
+#define LZSMAXWATCH 1024   /* number of entries in watch table */
 
 #undef _LZS_EXTCTRL_    /* external control interface */
 #ifdef _LZS_EXTCTRL_

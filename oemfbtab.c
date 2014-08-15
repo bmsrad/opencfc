@@ -131,13 +131,17 @@ void LzsSetOEMFBTable2(void)
 		   fpIecFBTab_l[3]   = (tLzsIecFB LZSCONST*)&Oem2FBTab_g;
 	}
 	{
-		int i=0;
+	int i=0;
 	for(i=0;i<4;i++)
 	{
 		logMsg("Grp %d (begin:0x%08x): %03d FBs\n",i,fpIecFBTab_l[i],wFBTabEntrys_l[i],4,5,6);
 	}
+
 	}
 #endif
 
 }
-
+LZSBYTE* BKMGetDSAddr()
+{
+	return (LZSBYTE*)(pCurrentProgramData_g->RegDS);
+}

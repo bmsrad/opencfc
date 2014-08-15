@@ -39,7 +39,6 @@
 #include <smMemLib.h>
 #include <smObjLib.h>
 
-#undef _FORCE_VARIABLES_
 #ifdef _LZS_ERROR_LOG_CPUEXCEPTIONS
 #include <esf.h>
 #endif
@@ -53,9 +52,9 @@ extern unsigned int G_dwTickCount;
 /* for persistency                                          */
 /************************************************************/
 #define PERSISTENCY_BUFFER_SIZE 512
-#define IECProgram "/ata0/iecprg.dat"
+#define IECProgram "/ata0/iecrom.dat"
 #ifdef _LZS_DYNAMIC_RETAIN_
-#define DRDataFile "/tffs0/dretain.dat"
+#define DRDataFile "/ata0/dretain.dat"
 #endif
 
 LZSDWORD dwByteCounter;
@@ -1921,7 +1920,7 @@ LZSBOOL LzsEnvSaveOpen(LZSCONST LZSCHAR * pszStorageName_p,    /*[i] optional na
 {
 	/* reset byte counter */
     dwByteCounter = 0;
-    printf("Persistency: SaveOpen %s!\n",pszStorageName_p);
+
 	/* open/create persistency file */
 	iecProgFd = open(pszStorageName_p, O_CREAT | O_RDWR, 0644);
 
@@ -1950,7 +1949,7 @@ LZSBOOL LzsEnvRestoreOpen(LZSCONST LZSCHAR * pszStorageName_p /*[i] optional nam
 {
 	/* open persistency file */
 	iecProgFd = open(pszStorageName_p, O_RDONLY, 0644);
-	printf("Persistency: RestoreOpen %s!\n",pszStorageName_p);
+
 	if (iecProgFd == ERROR)
 	{
 		LZSTRACE0("Persistency: RestoreOpen failed!\n");
@@ -2454,12 +2453,12 @@ LZSBOOL LzsEnvLoadDynamicRetain(void)
 
 	if (iecProgFd == ERROR)
 	{
-		LZSTRACE0("Dynamic retain: open file for restore failed!\n");
+		printf("Dynamic retain: open file for restore failed!\n");
 		return LZSFALSE;
 	}
 	else
 	{
-		LZSTRACE0("Dynamic retain: open file for restore success.\n");
+		printf("Dynamic retain: open file for restore success.\n");
 	}
 
 	/* --- READ DATA --- */
@@ -2471,6 +2470,7 @@ LZSBOOL LzsEnvLoadDynamicRetain(void)
 	if (dwDRResVersion_g != pTaskDefTab->m_PlcVer.m_TimeStamp)
 	{
 		close(iecProgFd);
+		printf("Dynamic retain: File version mismatch!\n");
 		LzsMemResetDynamicRetain();
 		return FALSE;
 	}
